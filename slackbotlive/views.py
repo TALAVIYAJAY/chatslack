@@ -106,7 +106,10 @@ def slack_event_listener(request):
         # ✅ 7. Fetch last 5 conversations from PostgreSQL
         last_5_conversations = cs.objects.filter(user_id=user_id).order_by('-created_at')[:5]
 
-        # ✅ 8. Format history for Llama3 API
+        # ✅ 8. Reverse order so the oldest appears first
+        last_5_conversations = list(last_5_conversations)[::-1] 
+
+        # ✅ 9. Format history for Llama3 API
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
         print(f"User Input Message: {user_message}")  
