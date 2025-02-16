@@ -128,6 +128,3 @@ def slack_event_listener(request):
         print(f"Slack Event Error: {e}")
         return JsonResponse({"error": str(e)}, status=500)
 
-def home(request):
-    """Basic home route to check if Django server is running."""
-    return JsonResponse({"message": "Slack Bot is Running!"})

@@ -19,7 +19,5 @@ from django.urls import path
 from slackbotlive import views  # Import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('slack/events/', views.slack_event_listener),  # Slack Event Listener
-    path('', views.home),  # New Home Page
 ]
