@@ -4,6 +4,7 @@ import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
+from django.shortcuts import render
 from .models import cs
 
 # Load environment variables
@@ -128,3 +129,6 @@ def slack_event_listener(request):
         print(f"Slack Event Error: {e}")
         return JsonResponse({"error": str(e)}, status=500)
 
+def home(request):
+    """Renders the home page with Slack instructions."""
+    return render(request, 'home.html')
