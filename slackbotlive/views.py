@@ -44,7 +44,6 @@ def get_llama3_response(user_input, history):
     #OPTION 2 : DEFAULT ANSWER
     return "DEFAULT ANSWER IS SETUP"
 
-
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
     url = "https://slack.com/api/chat.postMessage"
@@ -65,9 +64,21 @@ def send_slack_message(channel, text):
 def slack_event_listener(request):
     """Handles Slack events and ensures only valid messages are processed."""
     try:
-        data = json.loads(request.body)
+        # ✅ 1. Log raw request body for debugging
+        raw_body = request.body.decode("utf-8")
+        print("Raw Request Body:", raw_body)
 
-        # ✅ Handle Slack challenge verification
+        # ✅ 2. Handle empty request body
+        if not raw_body:
+            return JsonResponse({"error": "Empty request body"}, status=400)
+
+        # ✅ 3. Parse JSON safely
+        try:
+            data = json.loads(raw_body)
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON received"}, status=400)
+
+        # ✅ 4. Handle Slack URL verification challenge
         if "challenge" in data:
             return JsonResponse({"challenge": data["challenge"]})
 
@@ -75,40 +86,40 @@ def slack_event_listener(request):
         user_message = event.get("text", "").strip()
         channel = event.get("channel")
         event_type = event.get("type")
-        bot_id = event.get("bot_id")  # BOT ID (IGNORE BOT MESSAGES)
-        user_id = event.get("user")  # ✅ EXTRACT USER ID
+        bot_id = event.get("bot_id")  # Ignore bot messages
+        user_id = event.get("user")  # Extract user ID
 
-        # ✅ Ignore bot messages & non-message events
+        # ✅ 5. Ignore bot messages & non-message events
         if bot_id or event_type != "message" or not user_message:
             return JsonResponse({"status": "ignored"})
 
-        # ✅ Ignore system messages (join/leave events)
+        # ✅ 6. Ignore system messages (join/leave events)
         if "has joined the channel" in user_message.lower() or "has left the channel" in user_message.lower():
-            print(f"Ignored system message: {user_message}")  # ✅ Debugging
+            print(f"Ignored system message: {user_message}")  
             return JsonResponse({"status": "ignored"})
 
         print("\n---------------------\n")
-        print(f"Received Slack Message from User ID : {user_id}")  # ✅ Debugging
+        print(f"Received Slack Message from User ID: {user_id}")  
         print("\n---------------------\n")
 
-        # ✅ Fetch last 5 conversations (descending order)
+        # ✅ 7. Fetch last 5 conversations from PostgreSQL
         last_5_conversations = cs.objects.filter(user_id=user_id).order_by('-created_at')[:5]
 
-        # ✅ Format history for Llama3 API
+        # ✅ 8. Format history for Llama3 API
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
-        print(f"User Input Message: {user_message}")  # ✅ Debugging
+        print(f"User Input Message: {user_message}")  
         print("\n---------------------\n")
-        print(f"User Last 5 chat history: {history}")  # ✅ Debugging
+        print(f"User Last 5 chat history: {history}")  
         print("\n---------------------\n")
 
-        # ✅ Send user input + history to Hugging Face
-        bot_response = get_llama3_response(user_message, history)
+        # ✅ 9. Send user input + history to Hugging Face (replace with your logic)
+        bot_response = "DEFAULT ANSWER IS SETUP"
 
-        # ✅ Save conversation to PostgreSQL
+        # ✅ 10. Save conversation to PostgreSQL
         cs.objects.create(user_id=user_id, user_input=user_message, bot_response=bot_response)
 
-        # ✅ Send response to Slack
+        # ✅ 11. Send response to Slack
         send_slack_message(channel, bot_response)
 
         return JsonResponse({"status": "ok"})
