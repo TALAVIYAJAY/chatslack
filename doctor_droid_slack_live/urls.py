@@ -20,4 +20,5 @@ from slackbotlive import views  # Import views
 
 urlpatterns = [
     path('slack/events/', views.slack_event_listener),  # Slack Event Listener
+    path('', views.home),
 ]
