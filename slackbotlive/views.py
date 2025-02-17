@@ -24,56 +24,34 @@ HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 
 
 def get_llama3_response(user_input, history):
-    prompt = f"""
-    You are a helpful assistant. Please answer the user's question clearly and concisely:
-    User: {user_input}
-    Answer: 
-    """
-
-    logger.debug("Sending request to Hugging Face: %s", prompt)
-
+    """Calls the Hugging Face API to get a response for the query."""
     parameters = {
-        "max_new_tokens": 200,
-        "temperature": 0.7,
+        "max_new_tokens": 5000,
+        "temperature": 0.01,
         "top_k": 50,
         "top_p": 0.95,
         "return_full_text": False
     }
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+You are a helpful and smart assistant. You accurately provide answers to the provided user query.<|eot_id|>
+<|start_header_id|>user<|end_header_id|> Here is the query: ```{user_input}```.
+Provide a precise and concise answer.<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>"""
 
     headers = {
         'Authorization': f'Bearer {HUGGINGFACE_TOKEN}',
         'Content-Type': 'application/json'
     }
-
-    payload = {
-        "inputs": prompt,
-        "parameters": parameters
-    }
+    payload = {"inputs": prompt, "parameters": parameters}
 
     try:
         response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload)
-        response.raise_for_status()  # Ensure successful request
+        response.raise_for_status()
         response_data = response.json()
-
-        logger.debug("Full Response from Hugging Face: %s", response_data)
-
-        if 'generated_text' in response_data[0]:
-            generated_text = response_data[0]['generated_text'].strip()
-
-            if not generated_text:
-                logger.error("No generated text received from Hugging Face.")
-                return "I'm unable to generate a response right now."
-
-            words = generated_text.split()
-            truncated_text = " ".join(words[:200])  # Truncate to first 200 words
-            return truncated_text
-
-        return "An error occurred while processing the response."
-
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Request error: {e}")
-        return "I'm unable to provide an answer at the moment. Please try again later."
-
+        return response_data[0]['generated_text'].strip() if 'generated_text' in response_data[0] else "Error in API response."
+    except Exception as e:
+        print("Error:",e)
+        return "I am unable to provide an answer at the moment. Please try again later."
 
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
