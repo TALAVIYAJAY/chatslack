@@ -6,10 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from django.shortcuts import render
 from .models import cs
-import logging
-
-# Initialize logging
-logger = logging.getLogger(__name__)
+from django.core.cache import cache  # ✅ Import Django cache for event deduplication
 
 # Load environment variables
 load_dotenv()
@@ -24,13 +21,14 @@ HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 
 
 def get_llama3_response(user_input, history):
+    """Calls the Hugging Face API to get a response from Llama3."""
     prompt = f"""
     You are a helpful assistant. Please answer the user's question clearly and concisely:
     User: {user_input}
     Answer: 
     """
 
-    logger.debug("Sending request to Hugging Face: %s", prompt)
+    print("Sending request to Hugging Face:", prompt)
 
     parameters = {
         "max_new_tokens": 200,
@@ -55,13 +53,13 @@ def get_llama3_response(user_input, history):
         response.raise_for_status()  # Ensure successful request
         response_data = response.json()
 
-        logger.debug("Full Response from Hugging Face: %s", response_data)
+        print("Full Response from Hugging Face:", response_data)
 
-        if 'generated_text' in response_data[0]:
+        if isinstance(response_data, list) and 'generated_text' in response_data[0]:
             generated_text = response_data[0]['generated_text'].strip()
 
             if not generated_text:
-                logger.error("No generated text received from Hugging Face.")
+                print("No generated text received from Hugging Face.")
                 return "I'm unable to generate a response right now."
 
             words = generated_text.split()
@@ -71,13 +69,13 @@ def get_llama3_response(user_input, history):
         return "An error occurred while processing the response."
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"Request error: {e}")
+        print(f"Request error: {e}")
         return "I'm unable to provide an answer at the moment. Please try again later."
 
 
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
-    logger.debug("Sending message to Slack: %s", text)
+    print("Sending message to Slack:", text)
     url = "https://slack.com/api/chat.postMessage"
     headers = {
         "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
@@ -90,26 +88,23 @@ def send_slack_message(channel, text):
     try:
         response = requests.post(url, headers=headers, json=payload)
         response_data = response.json()
-        logger.debug("Slack Response: %s", response_data)
+        print("Slack Response:", response_data)
         return response_data
     except requests.exceptions.RequestException as e:
-        logger.error("Error sending message to Slack: %s", e)
+        print("Error sending message to Slack:", e)
         return {"error": "Failed to send message to Slack"}
 
 
 @csrf_exempt
 def slack_event_listener(request):
-    """Handles Slack events and ensures only valid messages are processed."""
+    """Handles Slack events and ensures only valid messages are processed once."""
     try:
-        # Log raw request body for debugging
         raw_body = request.body.decode("utf-8")
-        logger.debug("Raw Request Body: %s", raw_body)
+        print("Raw Request Body:", raw_body)
 
-        # Handle empty request body
         if not raw_body:
             return JsonResponse({"error": "Empty request body"}, status=400)
 
-        # Parse JSON safely
         try:
             data = json.loads(raw_body)
         except json.JSONDecodeError:
@@ -120,11 +115,20 @@ def slack_event_listener(request):
             return JsonResponse({"challenge": data["challenge"]})
 
         event = data.get("event", {})
+        event_id = data.get("event_id")  # ✅ Use event_id to prevent duplicates
         user_message = event.get("text", "").strip()
         channel = event.get("channel")
         event_type = event.get("type")
         bot_id = event.get("bot_id")  # Ignore bot messages
         user_id = event.get("user")  # Extract user ID
+
+        # ✅ Check if event has already been processed (to prevent duplicate responses)
+        if cache.get(event_id):
+            print(f"Duplicate event detected: {event_id}. Ignoring...")
+            return JsonResponse({"status": "duplicate_ignored"})
+
+        # ✅ Store event_id in cache for 10 minutes to prevent reprocessing
+        cache.set(event_id, True, timeout=600)
 
         # Ignore bot messages & non-message events
         if bot_id or event_type != "message" or not user_message:
@@ -132,11 +136,11 @@ def slack_event_listener(request):
 
         # Ignore system messages (join/leave events)
         if "has joined the channel" in user_message.lower() or "has left the channel" in user_message.lower():
-            logger.info(f"Ignored system message: {user_message}")
+            print(f"Ignored system message: {user_message}")
             return JsonResponse({"status": "ignored"})
 
-        logger.info("Received Slack Message from User ID: %s", user_id)
-        logger.info("User Message: %s", user_message)
+        print("Received Slack Message from User ID:", user_id)
+        print("User Message:", user_message)
 
         # Fetch last 5 conversations from PostgreSQL
         last_5_conversations = cs.objects.filter(user_id=user_id).order_by('-created_at')[:5]
@@ -147,12 +151,12 @@ def slack_event_listener(request):
         # Format history for Llama3 API
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
-        logger.info("User Input Message: %s", user_message)
-        logger.info("User Last 5 chat history: %s", history)
+        print("User Input Message:", user_message)
+        print("User Last 5 chat history:", history)
 
         # Send user input + history to Hugging Face
         bot_response = get_llama3_response(user_message, history)
-        logger.info("Generated Bot Response: %s", bot_response)
+        print("Generated Bot Response:", bot_response)
 
         # Save conversation to PostgreSQL
         cs.objects.create(user_id=user_id, user_input=user_message, bot_response=bot_response)
@@ -163,7 +167,7 @@ def slack_event_listener(request):
         return JsonResponse({"status": "ok"})
 
     except Exception as e:
-        logger.error(f"Slack Event Error: {e}")
+        print(f"Slack Event Error: {e}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -196,10 +200,10 @@ def slack_oauth_callback(request):
         access_token = response_data.get("access_token")
         team_name = response_data.get("team", {}).get("name")
 
-        logger.info(f"Slack OAuth Success: {team_name} - Token: {access_token}")
+        print(f"Slack OAuth Success: {team_name} - Token: {access_token}")
 
         return HttpResponseRedirect("/")  # Redirect to home after successful login
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"OAuth Request Error: {e}")
+        print(f"OAuth Request Error: {e}")
         return JsonResponse({"error": "OAuth request failed"}, status=500)
