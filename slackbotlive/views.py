@@ -173,8 +173,6 @@ def slack_event_listener(request):
         # Format history for Llama3 API
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
-        print("User Last 5 chat history:", history)
-
         # Send user input to Hugging Face API
         bot_response = get_llama3_response(user_message,history)
         print("Generated Bot Response:", bot_response)
