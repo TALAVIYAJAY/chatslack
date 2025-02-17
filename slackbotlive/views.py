@@ -47,7 +47,7 @@ def get_openai_response(query, chat_history):
         response_text = response["choices"][0]["message"]["content"]
         return response_text
 
-    except openai.error.OpenAIError as e:
+    except Exception as e:  # ✅ Catch generic exception if openai.OpenAIError doesn't work
         print("Error with OpenAI API:", str(e))
         return "An error occurred while fetching a response."
 
