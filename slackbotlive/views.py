@@ -51,7 +51,7 @@ def get_openai_response(query, chat_history):
     # Call OpenAI API for completion
     try:
         completion = client.chat.completions.create(
-            model="gpt-4",  # You can use other models like "gpt-3.5-turbo" as well
+            model="gpt-4o-mini-2024-07-18",  # You can use other models like "gpt-3.5-turbo" as well
             messages=messages,
             temperature=0.7
         )
