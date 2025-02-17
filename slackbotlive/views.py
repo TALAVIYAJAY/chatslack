@@ -118,7 +118,7 @@ def slack_event_listener(request):
         print("\n---------------------\n")
 
         # ✅ 9. Send user input + history to Hugging Face (replace with your logic)
-        bot_response = "DEFAULT ANSWER IS SETUP"
+        bot_response = get_llama3_response(user_message, history)
 
         # ✅ 10. Save conversation to PostgreSQL
         cs.objects.create(user_id=user_id, user_input=user_message, bot_response=bot_response)
@@ -135,3 +135,30 @@ def slack_event_listener(request):
 def home(request):
     """Renders the home page with Slack instructions."""
     return render(request, 'home.html')
+
+def slack_oauth_callback(request):
+    """Handles OAuth callback after Slack authentication."""
+    code = request.GET.get("code")
+
+    if not code:
+        return JsonResponse({"error": "Authorization code not found"}, status=400)
+
+    token_url = "https://slack.com/api/oauth.v2.access"
+    payload = {
+        "client_id": SLACK_CLIENT_ID,
+        "client_secret": SLACK_CLIENT_SECRET,
+        "code": code
+    }
+
+    response = requests.post(token_url, data=payload)
+    response_data = response.json()
+
+    if not response_data.get("ok"):
+        return JsonResponse({"error": response_data.get("error", "OAuth failed")}, status=400)
+
+    access_token = response_data.get("access_token")
+    team_name = response_data.get("team", {}).get("name")
+    
+    print(f"Slack OAuth Success: {team_name} - Token: {access_token}")
+
+    return HttpResponseRedirect("/")  # Redirect to home after successful login
