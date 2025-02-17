@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from django.shortcuts import render
 from .models import cs
+from django.http import HttpResponseRedirect
 
 # Load environment variables
 load_dotenv()
