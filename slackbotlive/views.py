@@ -20,14 +20,14 @@ HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 
 def get_llama3_response(user_input, history):
-    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
-    You are a helpful and intelligent assistant. Provide a concise and accurate response to the user's query.<|eot_id|>
-    <|start_header_id|>user<|end_header_id|> Here is the query: ```{user_input}```.
-    Provide a brief and precise answer within 200 words, avoiding repetition.<|eot_id|>"""
+    prompt = f"""
+    You are a helpful assistant. Please answer the user's question clearly and concisely:
+    User: {user_input}
+    Answer: 
+    """
 
-    # Request parameters
     parameters = {
-        "max_new_tokens": 500,
+        "max_new_tokens": 200,
         "temperature": 0.7,
         "top_k": 50,
         "top_p": 0.95,
@@ -38,7 +38,7 @@ def get_llama3_response(user_input, history):
         'Authorization': f'Bearer {HUGGINGFACE_TOKEN}',
         'Content-Type': 'application/json'
     }
-    
+
     payload = {
         "inputs": prompt,
         "parameters": parameters
@@ -49,7 +49,7 @@ def get_llama3_response(user_input, history):
         response.raise_for_status()  # Ensure successful request
         response_data = response.json()
 
-        # Log the full response to see what the API returns
+        # Log the full response
         print("Full Response from Hugging Face:", response_data)
 
         if 'generated_text' in response_data[0]:
@@ -68,7 +68,6 @@ def get_llama3_response(user_input, history):
     except requests.exceptions.RequestException as e:
         print(f"Request error: {e}")
         return "I'm unable to provide an answer at the moment. Please try again later."
-
 
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
