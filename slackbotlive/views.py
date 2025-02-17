@@ -6,7 +6,6 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from django.shortcuts import render
 from .models import cs
-from django.core.cache import cache  # ✅ Import Django cache for event deduplication
 
 # Load environment variables
 load_dotenv()
@@ -19,58 +18,44 @@ SLACK_SIGNING_SECRET = os.getenv("SLACK_SIGNING_SECRET")
 HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 
+# Cache to store processed event IDs
+event_cache = set()
 
-def get_llama3_response(user_input, history):
-    """Calls the Hugging Face API to get a response from Llama3."""
-    prompt = f"""
-    You are a helpful assistant. Please answer the user's question clearly and concisely:
-    User: {user_input}
-    Answer: 
-    """
 
-    print("Sending request to Hugging Face:", prompt)
+def get_llama3_response(query,chat_history):
 
+    print("User Message:", query)
+    print('\n----------------------\n')
+    print("User Last 5 chat history:", chat_history)
+    print('\n----------------------\n')
+
+    """Calls the Hugging Face API to get a response for the query."""
     parameters = {
-        "max_new_tokens": 200,
-        "temperature": 0.7,
+        "max_new_tokens": 5000,
+        "temperature": 0.01,
         "top_k": 50,
         "top_p": 0.95,
         "return_full_text": False
     }
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+You are a helpful and smart assistant. You accurately provide answers to the provided user query.<|eot_id|>
+<|start_header_id|>user<|end_header_id|> Here is the query: ```{query}```.
+Provide a precise and concise answer.<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>"""
 
     headers = {
         'Authorization': f'Bearer {HUGGINGFACE_TOKEN}',
         'Content-Type': 'application/json'
     }
-
-    payload = {
-        "inputs": prompt,
-        "parameters": parameters
-    }
+    payload = {"inputs": prompt, "parameters": parameters}
 
     try:
         response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload)
-        response.raise_for_status()  # Ensure successful request
+        response.raise_for_status()
         response_data = response.json()
-
-        print("Full Response from Hugging Face:", response_data)
-
-        if isinstance(response_data, list) and 'generated_text' in response_data[0]:
-            generated_text = response_data[0]['generated_text'].strip()
-
-            if not generated_text:
-                print("No generated text received from Hugging Face.")
-                return "I'm unable to generate a response right now."
-
-            words = generated_text.split()
-            truncated_text = " ".join(words[:200])  # Truncate to first 200 words
-            return truncated_text
-
-        return "An error occurred while processing the response."
-
-    except requests.exceptions.RequestException as e:
-        print(f"Request error: {e}")
-        return "I'm unable to provide an answer at the moment. Please try again later."
+        return response_data[0]['generated_text'].strip() if 'generated_text' in response_data[0] else "Error in API response."
+    except Exception as e:
+        return f"An error occurred: {e}"
 
 
 def send_slack_message(channel, text):
@@ -97,14 +82,17 @@ def send_slack_message(channel, text):
 
 @csrf_exempt
 def slack_event_listener(request):
-    """Handles Slack events and ensures only valid messages are processed once."""
+    """Handles Slack events and ensures only valid messages are processed."""
     try:
+        # Log raw request body for debugging
         raw_body = request.body.decode("utf-8")
         print("Raw Request Body:", raw_body)
 
+        # Handle empty request body
         if not raw_body:
             return JsonResponse({"error": "Empty request body"}, status=400)
 
+        # Parse JSON safely
         try:
             data = json.loads(raw_body)
         except json.JSONDecodeError:
@@ -115,20 +103,12 @@ def slack_event_listener(request):
             return JsonResponse({"challenge": data["challenge"]})
 
         event = data.get("event", {})
-        event_id = data.get("event_id")  # ✅ Use event_id to prevent duplicates
+        event_id = data.get("event_id")  # Get event ID to prevent duplicate processing
         user_message = event.get("text", "").strip()
         channel = event.get("channel")
         event_type = event.get("type")
         bot_id = event.get("bot_id")  # Ignore bot messages
         user_id = event.get("user")  # Extract user ID
-
-        # ✅ Check if event has already been processed (to prevent duplicate responses)
-        if cache.get(event_id):
-            print(f"Duplicate event detected: {event_id}. Ignoring...")
-            return JsonResponse({"status": "duplicate_ignored"})
-
-        # ✅ Store event_id in cache for 10 minutes to prevent reprocessing
-        cache.set(event_id, True, timeout=600)
 
         # Ignore bot messages & non-message events
         if bot_id or event_type != "message" or not user_message:
@@ -139,8 +119,14 @@ def slack_event_listener(request):
             print(f"Ignored system message: {user_message}")
             return JsonResponse({"status": "ignored"})
 
+        # Prevent duplicate event processing
+        if event_id in event_cache:
+            print(f"Duplicate event detected: {event_id}")
+            return JsonResponse({"status": "ignored"})
+        event_cache.add(event_id)
+
+        print('\n----------------------\n')
         print("Received Slack Message from User ID:", user_id)
-        print("User Message:", user_message)
 
         # Fetch last 5 conversations from PostgreSQL
         last_5_conversations = cs.objects.filter(user_id=user_id).order_by('-created_at')[:5]
@@ -151,11 +137,10 @@ def slack_event_listener(request):
         # Format history for Llama3 API
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
-        print("User Input Message:", user_message)
         print("User Last 5 chat history:", history)
 
-        # Send user input + history to Hugging Face
-        bot_response = get_llama3_response(user_message, history)
+        # Send user input to Hugging Face API
+        bot_response = get_llama3_response(user_message,history)
         print("Generated Bot Response:", bot_response)
 
         # Save conversation to PostgreSQL
