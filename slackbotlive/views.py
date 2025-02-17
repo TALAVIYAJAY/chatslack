@@ -119,12 +119,6 @@ def slack_event_listener(request):
         # Fetch last 5 conversations from PostgreSQL
         last_5_conversations = cs.objects.filter(user_id=user_id).order_by('-created_at')[:5]
 
-        # Check if the same message is already in the history
-        last_user_message = last_5_conversations[0].user_input if last_5_conversations else None
-        if last_user_message == user_message:
-            logger.info("Duplicate message detected: %s", user_message)
-            return JsonResponse({"status": "ignored"})
-
         # Reverse order so the oldest appears first
         last_5_conversations = list(last_5_conversations)[::-1]
 
