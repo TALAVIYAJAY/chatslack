@@ -20,15 +20,14 @@ HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 
 def get_llama3_response(user_input, history):
-    """Sends user input and past context to Hugging Face API, with a fallback for errors."""
+    """Generates a response based on the user input, without using the history for response generation."""
     
-    # Constructing the prompt with previous context (history)
+    # Constructing the prompt with just the user input (no history context)
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
 You are a helpful and intelligent assistant. Provide a concise and accurate response to the user's query.<|eot_id|>
 <|start_header_id|>user<|end_header_id|> Here is the query: ```{user_input}```.
-<|start_header_id|>history<|end_header_id|> Previous interactions: {history}.
 Provide a brief and precise answer within 200 words, avoiding repetition.<|eot_id|>"""
-    
+
     # Request parameters
     parameters = {
         "max_new_tokens": 500,  # Control length of response
@@ -60,10 +59,6 @@ Provide a brief and precise answer within 200 words, avoiding repetition.<|eot_i
             # Ensure the response is within 200 words
             words = generated_text.split()
             truncated_text = " ".join(words[:200])  # Truncate to first 200 words
-            
-            # Check if the response is repeating (if it's the same as the last one)
-            if history and generated_text == history[-1]['bot']:
-                return "The answer is already provided. Let me know if you need further clarification."
             
             return truncated_text
 
