@@ -6,6 +6,9 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from django.shortcuts import render
 from .models import cs
+import openai
+import os
+import requests
 
 # Load environment variables
 load_dotenv()
@@ -22,18 +25,13 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 # Cache to store processed event IDs
 event_cache = set()
 
-# Function to generate LLM ANSWER
-import openai
-import os
-import requests
-
 # Function to generate LLM answer using OpenAI API
 def get_openai_response(query, chat_history):
     """Calls OpenAI API to get a response for the query, including chat history."""
 
     print("User Message:", query)
     print('\n----------------------\n')
-    print("User Last 5 chat history:", chat_history)
+    print("User Last 5 Chat History:", chat_history)
     print('\n----------------------\n')
 
     # Ensure API key is set
