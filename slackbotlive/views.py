@@ -37,13 +37,12 @@ def get_openai_response(query, chat_history):
     print("User Message:", query)
     print("User Chat History:", chat_history)
 
-    # Use OpenAI's completion API correctly
+    # Use OpenAI's API correctly
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",  # Ensure you're using the correct model name
+            model="gpt-4o",  # Ensure you're using the correct model name
             messages=[{"role": "user", "content": query}],
-            temperature=0.7,
-            api_key=api_key  # Explicitly pass API key
+            temperature=0.7
         )
 
         # Extract the response text
@@ -51,7 +50,7 @@ def get_openai_response(query, chat_history):
 
         return response_text
 
-    except openai.error.OpenAIError as e:
+    except openai.OpenAIError as e:  # Fix: Use openai.OpenAIError directly
         print("Error with OpenAI API:", str(e))
         return "An error occurred while fetching a response."
 
