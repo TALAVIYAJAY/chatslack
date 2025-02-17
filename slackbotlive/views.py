@@ -30,27 +30,28 @@ def get_openai_response(query, chat_history):
     """Calls OpenAI API to get a response for the query."""
 
     # Ensure OpenAI API key is set
-    api_key = OPENAI_API_KEY  
-    if not api_key:
+    if not OPENAI_API_KEY:
         raise ValueError("Missing OpenAI API Key!")
 
     print("User Message:", query)
     print("User Chat History:", chat_history)
 
-    # Use OpenAI's API correctly
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4o",  # Ensure you're using the correct model name
+        # ✅ Corrected OpenAI API usage
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+
+        response = client.chat.completions.create(
+            model="gpt-4-turbo",  # Use the latest supported model
             messages=[{"role": "user", "content": query}],
             temperature=0.7
         )
 
-        # Extract the response text
-        response_text = response["choices"][0]["message"]["content"]
+        # ✅ Extract response text correctly
+        response_text = response.choices[0].message.content
 
         return response_text
 
-    except openai.OpenAIError as e:  # Fix: Use openai.OpenAIError directly
+    except openai.OpenAIError as e:
         print("Error with OpenAI API:", str(e))
         return "An error occurred while fetching a response."
 
