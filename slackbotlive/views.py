@@ -27,7 +27,7 @@ def get_llama3_response(user_input, history):
 You are a helpful and intelligent assistant. Provide a concise and accurate response to the user's query.<|eot_id|>
 <|start_header_id|>user<|end_header_id|> Here is the query: ```{user_input}```.
 <|start_header_id|>history<|end_header_id|> Previous interactions: {history}.
-Provide a brief and precise answer within 200 words.<|eot_id|>"""
+Provide a brief and precise answer within 200 words, avoiding repetition.<|eot_id|>"""
     
     # Request parameters
     parameters = {
@@ -59,7 +59,13 @@ Provide a brief and precise answer within 200 words.<|eot_id|>"""
             
             # Ensure the response is within 200 words
             words = generated_text.split()
-            return " ".join(words[:200])  # Truncate to first 200 words
+            truncated_text = " ".join(words[:200])  # Truncate to first 200 words
+            
+            # Check if the response is repeating (if it's the same as the last one)
+            if history and generated_text == history[-1]['bot']:
+                return "The answer is already provided. Let me know if you need further clarification."
+            
+            return truncated_text
 
         return "An error occurred while processing the response."
 
@@ -87,21 +93,21 @@ def send_slack_message(channel, text):
 def slack_event_listener(request):
     """Handles Slack events and ensures only valid messages are processed."""
     try:
-        # ✅ 1. Log raw request body for debugging
+        # Log raw request body for debugging
         raw_body = request.body.decode("utf-8")
         print("Raw Request Body:", raw_body)
 
-        # ✅ 2. Handle empty request body
+        # Handle empty request body
         if not raw_body:
             return JsonResponse({"error": "Empty request body"}, status=400)
 
-        # ✅ 3. Parse JSON safely
+        # Parse JSON safely
         try:
             data = json.loads(raw_body)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON received"}, status=400)
 
-        # ✅ 4. Handle Slack URL verification challenge
+        # Handle Slack URL verification challenge
         if "challenge" in data:
             return JsonResponse({"challenge": data["challenge"]})
 
@@ -112,11 +118,11 @@ def slack_event_listener(request):
         bot_id = event.get("bot_id")  # Ignore bot messages
         user_id = event.get("user")  # Extract user ID
 
-        # ✅ 5. Ignore bot messages & non-message events
+        # Ignore bot messages & non-message events
         if bot_id or event_type != "message" or not user_message:
             return JsonResponse({"status": "ignored"})
 
-        # ✅ 6. Ignore system messages (join/leave events)
+        # Ignore system messages (join/leave events)
         if "has joined the channel" in user_message.lower() or "has left the channel" in user_message.lower():
             print(f"Ignored system message: {user_message}")  
             return JsonResponse({"status": "ignored"})
@@ -125,27 +131,25 @@ def slack_event_listener(request):
         print(f"Received Slack Message from User ID: {user_id}")  
         print("\n---------------------\n")
 
-        # ✅ 7. Fetch last 5 conversations from PostgreSQL
+        # Fetch last 5 conversations from PostgreSQL
         last_5_conversations = cs.objects.filter(user_id=user_id).order_by('-created_at')[:5]
 
-        # ✅ 8. Reverse order so the oldest appears first
+        # Reverse order so the oldest appears first
         last_5_conversations = list(last_5_conversations)[::-1] 
 
-        # ✅ 9. Format history for Llama3 API
+        # Format history for Llama3 API
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
         print(f"User Input Message: {user_message}")  
-        print("\n---------------------\n")
         print(f"User Last 5 chat history: {history}")  
-        print("\n---------------------\n")
 
-        # ✅ 9. Send user input + history to Hugging Face (replace with your logic)
+        # Send user input + history to Hugging Face
         bot_response = get_llama3_response(user_message, history)
 
-        # ✅ 10. Save conversation to PostgreSQL
+        # Save conversation to PostgreSQL
         cs.objects.create(user_id=user_id, user_input=user_message, bot_response=bot_response)
 
-        # ✅ 11. Send response to Slack
+        # Send response to Slack
         send_slack_message(channel, bot_response)
 
         return JsonResponse({"status": "ok"})
