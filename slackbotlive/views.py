@@ -39,7 +39,7 @@ def get_openai_response(query, chat_history):
         client = openai.OpenAI(api_key=OPENAI_API_KEY)  # ✅ Correct initialization
 
         response = client.chat.completions.create(  # ✅ Updated method
-            model="gpt-4-turbo",  
+            model="gpt-4o",  
             messages=[{"role": "user", "content": query}],
             temperature=0.7
         )
