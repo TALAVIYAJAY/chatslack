@@ -19,20 +19,19 @@ HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 
 
-def get_llama3_response(user_input, history):
-    """Calls the Hugging Face API to get a response for the query."""
+def get_gpt3_response(user_input, history):
+    """Calls the Hugging Face API to get a response from GPT-3."""
     parameters = {
-        "max_new_tokens": 5000,
-        "temperature": 0.01,
+        "max_new_tokens": 500,
+        "temperature": 0.7,
         "top_k": 50,
         "top_p": 0.95,
         "return_full_text": False
     }
-    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-You are a helpful and smart assistant. You accurately provide answers to the provided user query.<|eot_id|>
-<|start_header_id|>user<|end_header_id|> Here is the query: ```{user_input}```.
-Provide a precise and concise answer.<|eot_id|>
-<|start_header_id|>assistant<|end_header_id|>"""
+
+    # Format chat history for GPT-3
+    formatted_history = "\n".join([f"User: {conv['user']}\nAssistant: {conv['bot']}" for conv in history])
+    prompt = f"{formatted_history}\nUser: {user_input}\nAssistant:"
 
     headers = {
         'Authorization': f'Bearer {HUGGINGFACE_TOKEN}',
@@ -46,7 +45,7 @@ Provide a precise and concise answer.<|eot_id|>
         response_data = response.json()
         return response_data[0]['generated_text'].strip() if 'generated_text' in response_data[0] else "Error in API response."
     except Exception as e:
-        print("Error :", e)
+        print("Error:", e)
         return "I am unable to provide an answer at the moment. Please try again later."
 
 
@@ -76,21 +75,17 @@ def send_slack_message(channel, text):
 def slack_event_listener(request):
     """Handles Slack events and ensures only valid messages are processed."""
     try:
-        # Log raw request body for debugging
         raw_body = request.body.decode("utf-8")
         print("Raw Request Body:", raw_body)
 
-        # Handle empty request body
         if not raw_body:
             return JsonResponse({"error": "Empty request body"}, status=400)
 
-        # Parse JSON safely
         try:
             data = json.loads(raw_body)
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON received"}, status=400)
 
-        # Handle Slack URL verification challenge
         if "challenge" in data:
             return JsonResponse({"challenge": data["challenge"]})
 
@@ -98,14 +93,12 @@ def slack_event_listener(request):
         user_message = event.get("text", "").strip()
         channel = event.get("channel")
         event_type = event.get("type")
-        bot_id = event.get("bot_id")  # Ignore bot messages
-        user_id = event.get("user")  # Extract user ID
+        bot_id = event.get("bot_id")
+        user_id = event.get("user")
 
-        # Ignore bot messages & non-message events
         if bot_id or event_type != "message" or not user_message:
             return JsonResponse({"status": "ignored"})
 
-        # Ignore system messages (join/leave events)
         if "has joined the channel" in user_message.lower() or "has left the channel" in user_message.lower():
             print(f"Ignored system message: {user_message}")
             return JsonResponse({"status": "ignored"})
@@ -119,14 +112,14 @@ def slack_event_listener(request):
         # Reverse order so the oldest appears first
         last_5_conversations = list(last_5_conversations)[::-1]
 
-        # Format history for Llama3 API
+        # Format history for GPT-3 API
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
         print("User Input Message:", user_message)
-        print("User Last 5 Chat history:", history)
+        print("User Last 5 Chat History:", history)
 
         # Send user input + history to Hugging Face
-        bot_response = get_llama3_response(user_message, history)
+        bot_response = get_gpt3_response(user_message, history)
         print("Generated Bot Response:", bot_response)
 
         # Save conversation to PostgreSQL
