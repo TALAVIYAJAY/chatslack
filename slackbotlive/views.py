@@ -6,12 +6,6 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from django.shortcuts import render
 from .models import cs
-import openai
-import os
-import requests
-import time
-import subprocess
-import json
 
 # Load environment variables
 load_dotenv()
@@ -23,77 +17,81 @@ SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_SIGNING_SECRET = os.getenv("SLACK_SIGNING_SECRET")
 HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Cache to store processed event IDs
-#event_cache = set()
+event_cache = set()
 
-# Function to generate LLM answer using OpenAI API
-def get_openai_response(query, chat_history):
-    """Fetch response from OpenAI using curl."""
-    
-    if not OPENAI_API_KEY:
-        raise ValueError("Missing OpenAI API Key!")
+# Function to generate LLM ANSWER
+def get_llama3_response(query, chat_history):
+    """Calls the Hugging Face API to get a response for the query, including chat history."""
 
     print("User Message:", query)
-    print("User Chat History:", chat_history)
-    
+    print('\n----------------------\n')
+    print("User Last 5 chat history:", chat_history)
+    print('\n----------------------\n')
+
+    parameters = {
+        "max_new_tokens": 5000,
+        "temperature": 0.01,
+        "top_k": 50,
+        "top_p": 0.95,
+        "return_full_text": False
+    }
+
+    # Format chat history for prompt
+    history_text = ""
+    for item in chat_history:
+        history_text += f"<|start_header_id|>user<|end_header_id|> {item['user']}<|eot_id|>\n"
+        history_text += f"<|start_header_id|>assistant<|end_header_id|> {item['bot']}<|eot_id|>\n"
+
+    # Construct the final prompt with chat history
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
+You are a helpful and smart assistant. You accurately provide answers to the provided user query.<|eot_id|>
+{history_text}
+<|start_header_id|>user<|end_header_id|> Here is the query: ```{query}```.
+Provide a precise and concise answer in less than 200 words. Ensure sentences are complete and not cut off mid-word.<|eot_id|>
+<|start_header_id|>assistant<|end_header_id|>"""
+
+    headers = {
+        'Authorization': f'Bearer {HUGGINGFACE_TOKEN}',
+        'Content-Type': 'application/json'
+    }
+    payload = {"inputs": prompt, "parameters": parameters}
+
     try:
-        # Define the OpenAI endpoint
-        url = "https://api.openai.com/v1/chat/completions"
+        response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload, timeout=30)
+        response.raise_for_status()
+        
+        # Ensure response is valid JSON
+        response_data = response.json()
+        
+        # Extract response text safely
+        generated_text = response_data[0].get('generated_text', "").strip() if response_data else ""
 
-        # Prepare the payload
-        payload = {
-            "model": "gpt-4o",
-            "messages": [{"role": "user", "content": query}],
-            "temperature": 0.7
-        }
+        # If no valid response, set default error message
+        if not generated_text:
+            print("Error: No generated text in response.")
+            return "I'm sorry, but I couldn't generate a response at the moment. Please try again."
 
-        # Convert payload to JSON string
-        payload_json = json.dumps(payload)
+        # Ensure response is within 200 words and does not cut sentences
+        words = generated_text.split()
+        if len(words) > 200:
+            truncated_response = " ".join(words[:200])
+            if "." in truncated_response:
+                truncated_response = truncated_response.rsplit(".", 1)[0] + "."  # Ensure a full sentence
+            return truncated_response
 
-        # Adding a basic rate-limiting (sleep) to prevent exceeding quota quickly
-        time.sleep(1)  # Sleep for 1 second between requests to mitigate rate limits
+        return generated_text
 
-        # Execute the curl command using subprocess
-        curl_command = [
-            "curl",
-            "-X", "POST", url,
-            "-H", "Content-Type: application/json",
-            "-H", f"Authorization: Bearer {OPENAI_API_KEY}",
-            "-d", payload_json
-        ]
-
-        # Run the curl command and capture the output
-        result = subprocess.run(curl_command, capture_output=True, text=True)
-
-        # Check for errors in the response
-        if result.returncode != 0:
-            raise Exception(f"Error with curl command: {result.stderr}")
-
-        # Parse the response JSON
-        response_data = json.loads(result.stdout)
-
-        # Print the full response to debug
-        print("API Response:", json.dumps(response_data, indent=2))
-
-        # Extract the response text if 'choices' key exists
-        if "choices" in response_data:
-            response_text = response_data["choices"][0]["message"]["content"]
-            return response_text
-        else:
-            raise Exception("API response does not contain 'choices' key.")
-
-    except subprocess.CalledProcessError as e:
-        print("Error with curl command:", str(e))
-        return "An error occurred while fetching a response."
-
+    except requests.exceptions.RequestException as req_err:
+        print(f"Request Error: {req_err}")
+    except KeyError as key_err:
+        print(f"Key Error: {key_err}")
     except Exception as e:
-        print("Unexpected Error:", str(e))
-        return "An error occurred while processing your request."
+        print(f"Unexpected Error: {e}")
 
-    #Option 2
-    #return "DeFAULT MESSAGE"
+    # Return a fallback response if an error occurs
+    return "I'm sorry, but I'm unable to process your request at the moment. Please try again later."
 
 # Function to Send LLM ANSWER to Slack
 def send_slack_message(channel, text):
@@ -158,10 +156,10 @@ def slack_event_listener(request):
             return JsonResponse({"status": "ignored"})
 
         # Prevent duplicate event processing
-        # if event_id in event_cache:
-        #     print(f"Duplicate event detected: {event_id}")
-        #     return JsonResponse({"status": "ignored"})
-        # event_cache.add(event_id)
+        if event_id in event_cache:
+            print(f"Duplicate event detected: {event_id}")
+            return JsonResponse({"status": "ignored"})
+        event_cache.add(event_id)
 
         print('\n----------------------\n')
         print("Received Slack Message from User ID:", user_id)
@@ -176,7 +174,7 @@ def slack_event_listener(request):
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
         # Send user input to Hugging Face API
-        bot_response = get_openai_response(user_message,history)
+        bot_response = get_llama3_response(user_message,history)
         print("Generated Bot Response:", bot_response)
 
         # Save conversation to PostgreSQL
