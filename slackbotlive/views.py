@@ -64,11 +64,10 @@ Provide a precise and concise answer in less than 50 words. Ensure sentences are
         
         # Ensure response is valid JSON
         response_data = response.json()
+        print("Full API Response:", response_data)  # Log the full response for better debugging
         
         # Extract response text safely
         generated_text = response_data[0].get('generated_text', "").strip() if response_data else ""
-
-        # If no valid response, set default error message
         if not generated_text:
             print("Error: No generated text in response.")
             return "I'm sorry, but I couldn't generate a response at the moment. Please try again."
