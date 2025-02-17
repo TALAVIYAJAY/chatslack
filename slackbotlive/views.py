@@ -26,6 +26,8 @@ def get_llama3_response(user_input, history):
     Answer: 
     """
 
+    print("Sending request to Hugging Face:", prompt)  # Add this for debugging
+
     parameters = {
         "max_new_tokens": 200,
         "temperature": 0.7,
@@ -69,8 +71,10 @@ def get_llama3_response(user_input, history):
         print(f"Request error: {e}")
         return "I'm unable to provide an answer at the moment. Please try again later."
 
+
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
+    print(f"Sending message to Slack: {text}")  # Add this for debugging
     url = "https://slack.com/api/chat.postMessage"
     headers = {
         "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
@@ -125,13 +129,20 @@ def slack_event_listener(request):
 
         print("\n---------------------\n")
         print(f"Received Slack Message from User ID: {user_id}")  
+        print(f"User Message: {user_message}")
         print("\n---------------------\n")
 
         # Fetch last 5 conversations from PostgreSQL
         last_5_conversations = cs.objects.filter(user_id=user_id).order_by('-created_at')[:5]
+        
+        # Check if the same message is already in the history
+        last_user_message = last_5_conversations[0].user_input if last_5_conversations else None
+        if last_user_message == user_message:
+            print(f"Duplicate message detected: {user_message}")
+            return JsonResponse({"status": "ignored"})
 
         # Reverse order so the oldest appears first
-        last_5_conversations = list(last_5_conversations)[::-1] 
+        last_5_conversations = list(last_5_conversations)[::-1]
 
         # Format history for Llama3 API
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
