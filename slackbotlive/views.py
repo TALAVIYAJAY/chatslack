@@ -48,7 +48,7 @@ def get_llama3_response(query, chat_history):
 You are a helpful and smart assistant. You accurately provide answers to the provided user query.<|eot_id|>
 {history_text}
 <|start_header_id|>user<|end_header_id|> Here is the query: ```{query}```.
-Provide a precise and concise answer.<|eot_id|>
+Provide a precise and concise answer in less than 200 words. Ensure sentences are complete and not cut off mid-word.<|eot_id|>
 <|start_header_id|>assistant<|end_header_id|>"""
 
     headers = {
@@ -61,7 +61,16 @@ Provide a precise and concise answer.<|eot_id|>
         response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload)
         response.raise_for_status()
         response_data = response.json()
-        return response_data[0]['generated_text'].strip() if 'generated_text' in response_data[0] else "Error in API response."
+        generated_text = response_data[0]['generated_text'].strip() if 'generated_text' in response_data[0] else "Error in API response."
+
+        # Ensure response is within 200 words and does not cut sentences
+        words = generated_text.split()
+        if len(words) > 200:
+            truncated_response = " ".join(words[:200])
+            if "." in truncated_response:
+                truncated_response = truncated_response.rsplit(".", 1)[0] + "."  # Ensure a full sentence
+            return truncated_response
+        return generated_text
     except Exception as e:
         return f"An error occurred: {e}"
 
