@@ -21,6 +21,8 @@ HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 # Cache to store processed event IDs
 event_cache = set()
 
+import requests
+
 def get_llama3_response(query, chat_history):
     """Calls the Hugging Face API to get a response for the query, including chat history."""
 
@@ -60,8 +62,17 @@ Provide a precise and concise answer in less than 200 words. Ensure sentences ar
     try:
         response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload)
         response.raise_for_status()
+        
+        # Ensure response is valid JSON
         response_data = response.json()
-        generated_text = response_data[0]['generated_text'].strip() if 'generated_text' in response_data[0] else "Error in API response."
+        
+        # Extract response text safely
+        generated_text = response_data[0].get('generated_text', "").strip() if response_data else ""
+
+        # If no valid response, set default error message
+        if not generated_text:
+            print("Error: No generated text in response.")
+            return "I'm sorry, but I couldn't generate a response at the moment. Please try again."
 
         # Ensure response is within 200 words and does not cut sentences
         words = generated_text.split()
@@ -70,10 +81,18 @@ Provide a precise and concise answer in less than 200 words. Ensure sentences ar
             if "." in truncated_response:
                 truncated_response = truncated_response.rsplit(".", 1)[0] + "."  # Ensure a full sentence
             return truncated_response
+
         return generated_text
+
+    except requests.exceptions.RequestException as req_err:
+        print(f"Request Error: {req_err}")
+    except KeyError as key_err:
+        print(f"Key Error: {key_err}")
     except Exception as e:
-        print(f"Error occurred: {e}")
-        return "I'm sorry, but I'm unable to process your request at the moment. Please try again later."
+        print(f"Unexpected Error: {e}")
+
+    # Return a fallback response if an error occurs
+    return "I'm sorry, but I'm unable to process your request at the moment. Please try again later."
 
 
 def send_slack_message(channel, text):
