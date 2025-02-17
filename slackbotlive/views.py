@@ -11,6 +11,8 @@ from .models import cs
 load_dotenv()
 
 # Slack and Hugging Face credentials
+SLACK_CLIENT_ID = os.getenv("SLACK_CLIENT_ID")
+SLACK_CLIENT_SECRET = os.getenv("SLACK_CLIENT_SECRET")
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_SIGNING_SECRET = os.getenv("SLACK_SIGNING_SECRET")
 HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
