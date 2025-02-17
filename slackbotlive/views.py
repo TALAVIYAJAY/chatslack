@@ -9,6 +9,7 @@ from .models import cs
 import openai
 import os
 import requests
+import time
 
 # Load environment variables
 load_dotenv()
@@ -34,24 +35,37 @@ def get_openai_response(query, chat_history):
 
     print("User Message:", query)
     print("User Chat History:", chat_history)
-    print("openai key:", OPENAI_API_KEY)
+    
     try:
-        client = openai.OpenAI(api_key=OPENAI_API_KEY)  # ✅ Correct initialization
+        # Initialize the OpenAI client
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
-        response = client.chat.completions.create(  # ✅ Updated method
+        # Adding a basic rate-limiting (sleep) to prevent exceeding quota quickly
+        time.sleep(1)  # Sleep for 1 second between requests to mitigate rate limits
+        
+        # Call the OpenAI API with the provided query
+        response = client.chat.completions.create(
             model="gpt-4o",  
             messages=[{"role": "user", "content": query}],
             temperature=0.7
         )
 
-        response_text = response.choices[0].message.content  # ✅ Correct response parsing
+        # Extract the response content
+        response_text = response.choices[0].message.content
         return response_text
 
-    except openai.OpenAIError as e:  # ✅ Correct exception handling
+    except openai.error.RateLimitError as e:
+        # Catch rate limit errors and handle them gracefully
+        print("Rate Limit Exceeded: Please wait and try again.")
+        return "Rate limit exceeded. Please try again later."
+
+    except openai.error.OpenAIError as e:
+        # Handle general OpenAI API errors
         print("Error with OpenAI API:", str(e))
         return "An error occurred while fetching a response."
 
     except Exception as e:
+        # Handle unexpected errors
         print("Unexpected Error:", str(e))
         return "An error occurred while processing your request."
 
