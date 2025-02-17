@@ -23,7 +23,7 @@ HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Cache to store processed event IDs
-event_cache = set()
+#event_cache = set()
 
 # Function to generate LLM answer using OpenAI API
 def get_openai_response(query, chat_history):
@@ -114,10 +114,10 @@ def slack_event_listener(request):
             return JsonResponse({"status": "ignored"})
 
         # Prevent duplicate event processing
-        if event_id in event_cache:
-            print(f"Duplicate event detected: {event_id}")
-            return JsonResponse({"status": "ignored"})
-        event_cache.add(event_id)
+        # if event_id in event_cache:
+        #     print(f"Duplicate event detected: {event_id}")
+        #     return JsonResponse({"status": "ignored"})
+        # event_cache.add(event_id)
 
         print('\n----------------------\n')
         print("Received Slack Message from User ID:", user_id)
