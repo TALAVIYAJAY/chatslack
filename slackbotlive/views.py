@@ -99,7 +99,7 @@ def send_slack_message(channel, text):
 
 @csrf_exempt
 def slack_event_listener(request):
-    """Handles Slack events and ensures only valid messages are processed."""
+    """Handles Slack events and processes them directly."""
     try:
         # Log raw request body for debugging
         raw_body = request.body.decode("utf-8")
