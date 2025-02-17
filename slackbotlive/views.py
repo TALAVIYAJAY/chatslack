@@ -140,6 +140,7 @@ def slack_event_listener(request):
 
         # Send user input + history to Hugging Face
         bot_response = get_llama3_response(user_message, history)
+        print("Generated Bot Response:", bot_response)
 
         # Save conversation to PostgreSQL
         cs.objects.create(user_id=user_id, user_input=user_message, bot_response=bot_response)
