@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from django.shortcuts import render
 from .models import cs
+from django.core.cache import cache  # Use Django's cache system to store processed event IDs
 
 # Load environment variables
 load_dotenv()
@@ -48,6 +49,7 @@ Provide a precise and concise answer.<|eot_id|>
     except Exception as e:
         print("Error:", e)
         return "I am unable to provide an answer at the moment. Please try again later."
+
 
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
@@ -99,6 +101,7 @@ def slack_event_listener(request):
         event_type = event.get("type")
         bot_id = event.get("bot_id")  # Ignore bot messages
         user_id = event.get("user")  # Extract user ID
+        event_id = event.get("event_id")  # Extract unique event ID
 
         # Ignore bot messages & non-message events
         if bot_id or event_type != "message" or not user_message:
@@ -108,6 +111,14 @@ def slack_event_listener(request):
         if "has joined the channel" in user_message.lower() or "has left the channel" in user_message.lower():
             print(f"Ignored system message: {user_message}")
             return JsonResponse({"status": "ignored"})
+
+        # Check if this event has been processed recently to avoid duplicates
+        if cache.get(event_id):
+            print(f"Duplicate event detected: {event_id}. Ignoring...")
+            return JsonResponse({"status": "ignored"})
+
+        # Mark the event as processed by storing its ID in the cache for a short period
+        cache.set(event_id, "processed", timeout=60)  # Set timeout (e.g., 60 seconds)
 
         print("Received Slack Message from User ID:", user_id)
         print("User Message:", user_message)
