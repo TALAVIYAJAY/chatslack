@@ -37,13 +37,12 @@ def get_openai_response(query, chat_history):
     print("User Chat History:", chat_history)
 
     try:
-        # ✅ Corrected OpenAI API initialization
-        client = openai.OpenAI(api_key=OPENAI_API_KEY)  # No 'proxies' argument
-
-        response = client.chat.completions.create(
-            model="gpt-4-turbo",  # Use a valid model name
+        # ✅ Use correct OpenAI API call (no client instantiation needed)
+        response = openai.chat.completions.create(  
+            model="gpt-4-turbo",
             messages=[{"role": "user", "content": query}],
-            temperature=0.7
+            temperature=0.7,
+            api_key=OPENAI_API_KEY  # Pass API key here instead of initializing a client
         )
 
         # ✅ Extract response text correctly
