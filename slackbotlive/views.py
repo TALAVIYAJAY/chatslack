@@ -10,6 +10,8 @@ import openai
 import os
 import requests
 import time
+import subprocess
+import json
 
 # Load environment variables
 load_dotenv()
@@ -28,7 +30,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Function to generate LLM answer using OpenAI API
 def get_openai_response(query, chat_history):
-    """Fetch response from OpenAI using the latest SDK."""
+    """Fetch response from OpenAI using curl."""
     
     if not OPENAI_API_KEY:
         raise ValueError("Missing OpenAI API Key!")
@@ -37,35 +39,50 @@ def get_openai_response(query, chat_history):
     print("User Chat History:", chat_history)
     
     try:
-        # Initialize the OpenAI client
-        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        # Define the OpenAI endpoint
+        url = "https://api.openai.com/v1/chat/completions"
+
+        # Prepare the payload
+        payload = {
+            "model": "gpt-4o",
+            "messages": [{"role": "user", "content": query}],
+            "temperature": 0.7
+        }
+
+        # Convert payload to JSON string
+        payload_json = json.dumps(payload)
 
         # Adding a basic rate-limiting (sleep) to prevent exceeding quota quickly
         time.sleep(1)  # Sleep for 1 second between requests to mitigate rate limits
-        
-        # Call the OpenAI API with the provided query
-        response = client.chat.completions.create(
-            model="gpt-4o",  
-            messages=[{"role": "user", "content": query}],
-            temperature=0.7
-        )
 
-        # Extract the response content
-        response_text = response.choices[0].message.content
+        # Execute the curl command using subprocess
+        curl_command = [
+            "curl",
+            "-X", "POST", url,
+            "-H", "Content-Type: application/json",
+            "-H", f"Authorization: Bearer {OPENAI_API_KEY}",
+            "-d", payload_json
+        ]
+
+        # Run the curl command and capture the output
+        result = subprocess.run(curl_command, capture_output=True, text=True)
+
+        # Check for errors in the response
+        if result.returncode != 0:
+            raise Exception(f"Error with curl command: {result.stderr}")
+
+        # Parse the response JSON
+        response_data = json.loads(result.stdout)
+
+        # Extract the response text
+        response_text = response_data["choices"][0]["message"]["content"]
         return response_text
 
-    except openai.error.RateLimitError as e:
-        # Catch rate limit errors and handle them gracefully
-        print("Rate Limit Exceeded: Please wait and try again.")
-        return "Rate limit exceeded. Please try again later."
-
-    except openai.error.OpenAIError as e:
-        # Handle general OpenAI API errors
-        print("Error with OpenAI API:", str(e))
+    except subprocess.CalledProcessError as e:
+        print("Error with curl command:", str(e))
         return "An error occurred while fetching a response."
 
     except Exception as e:
-        # Handle unexpected errors
         print("Unexpected Error:", str(e))
         return "An error occurred while processing your request."
 
