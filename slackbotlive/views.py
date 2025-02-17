@@ -99,7 +99,7 @@ def send_slack_message(channel, text):
 
 @csrf_exempt
 def slack_event_listener(request):
-    """Handles Slack events and processes them directly."""
+    """Handles Slack events and ensures only valid messages are processed."""
     try:
         # Log raw request body for debugging
         raw_body = request.body.decode("utf-8")
@@ -112,8 +112,6 @@ def slack_event_listener(request):
         # Parse JSON safely
         try:
             data = json.loads(raw_body)
-            logger.debug("Received Slack Event: %s", data)
-
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON received"}, status=400)
 
@@ -140,8 +138,14 @@ def slack_event_listener(request):
         logger.info("Received Slack Message from User ID: %s", user_id)
         logger.info("User Message: %s", user_message)
 
-        # Fetch last 5 conversations from PostgreSQL (even if the same message was asked previously)
+        # Fetch last 5 conversations from PostgreSQL
         last_5_conversations = cs.objects.filter(user_id=user_id).order_by('-created_at')[:5]
+
+        # Check if the same message is already in the history
+        last_user_message = last_5_conversations[0].user_input if last_5_conversations else None
+        if last_user_message == user_message:
+            logger.info("Duplicate message detected: %s", user_message)
+            return JsonResponse({"status": "ignored"})
 
         # Reverse order so the oldest appears first
         last_5_conversations = list(last_5_conversations)[::-1]
