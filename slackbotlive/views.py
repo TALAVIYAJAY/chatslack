@@ -100,7 +100,6 @@ def slack_event_listener(request):
         event_type = event.get("type")
         bot_id = event.get("bot_id")  # Ignore bot messages
         user_id = event.get("user")  # Extract user ID
-        event_id = event.get("event_id")  # Extract unique event ID
 
         # Ignore bot messages & non-message events
         if bot_id or event_type != "message" or not user_message:
