@@ -47,7 +47,7 @@ Provide a precise and concise answer.<|eot_id|>
         response_data = response.json()
         return response_data[0]['generated_text'].strip() if 'generated_text' in response_data[0] else "Error in API response."
     except Exception as e:
-        print("Error:", e)
+        print("Error :", e)
         return "I am unable to provide an answer at the moment. Please try again later."
 
 
