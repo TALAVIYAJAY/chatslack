@@ -21,8 +21,7 @@ HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 # Cache to store processed event IDs
 event_cache = set()
 
-import requests
-
+# Function to generate LLM ANSWER
 def get_llama3_response(query, chat_history):
     """Calls the Hugging Face API to get a response for the query, including chat history."""
 
@@ -94,7 +93,7 @@ Provide a precise and concise answer in less than 200 words. Ensure sentences ar
     # Return a fallback response if an error occurs
     return "I'm sorry, but I'm unable to process your request at the moment. Please try again later."
 
-
+# Function to Send LLM ANSWER to Slack
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
     print("Sending message to Slack:", text)
@@ -116,7 +115,7 @@ def send_slack_message(channel, text):
         print("Error sending message to Slack:", e)
         return {"error": "Failed to send message to Slack"}
 
-
+# Function to handle user query from slack
 @csrf_exempt
 def slack_event_listener(request):
     """Handles Slack events and ensures only valid messages are processed."""
@@ -192,12 +191,12 @@ def slack_event_listener(request):
         print(f"Slack Event Error: {e}")
         return JsonResponse({"error": str(e)}, status=500)
 
-
+# Function to render home page
 def home(request):
     """Renders the home page with Slack instructions."""
     return render(request, 'home.html')
 
-
+# Function to authenticate user
 def slack_oauth_callback(request):
     """Handles OAuth callback after Slack authentication."""
     code = request.GET.get("code")
