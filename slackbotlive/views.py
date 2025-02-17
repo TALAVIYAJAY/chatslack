@@ -28,15 +28,19 @@ event_cache = set()
 # Function to generate LLM answer using OpenAI API
 def get_openai_response(query, chat_history):
     """Calls OpenAI API to get a response for the query, including chat history."""
+    
+    # Ensure API key is set
+    if not OPENAI_API_KEY:
+        print("Error: OPENAI_API_KEY is not set.")
+        return "API key is missing. Please check the environment variable."
+
+    openai.api_key = OPENAI_API_KEY
 
     print("User Message:", query)
     print('\n----------------------\n')
     print("User Last 5 Chat History:", chat_history)
     print('\n----------------------\n')
 
-    # Ensure API key is set
-    openai.api_key = OPENAI_API_KEY
-    
     # Prepare the messages with chat history
     messages = []
     
@@ -48,7 +52,7 @@ def get_openai_response(query, chat_history):
     # Add the new query from the user
     messages.append({"role": "user", "content": query})
     
-    print("Send Message:",messages)
+    print("Send Message:", messages)
 
     # Call OpenAI API for completion
     try:
@@ -82,11 +86,10 @@ def get_openai_response(query, chat_history):
 
     except openai.error.OpenAIError as err:
         print(f"OpenAI API Error: {err}")
+        return "There was an issue with the OpenAI API. Please try again later."
     except Exception as e:
         print(f"Unexpected Error: {e}")
-
-    # Return a fallback response if an error occurs
-    return "I'm sorry, but I'm unable to process your request at the moment. Please try again later."
+        return "An unexpected error occurred. Please try again later."
 
 
 # Function to Send LLM ANSWER to Slack
