@@ -29,32 +29,27 @@ event_cache = set()
 def get_openai_response(query, chat_history):
     """Calls OpenAI API to get a response for the query."""
     
-    try:
-        # Set the OpenAI API key
-        api_key = OPENAI_API_KEY
-        OpenAI.api_key = api_key
-        client = OpenAI()
+    # Set the OpenAI API key
+    api_key = OPENAI_API_KEY
+    OpenAI.api_key = api_key
+    client = OpenAI()
 
-        print("User Message:", query)
-        print("User Chat History:", chat_history)
+    print("User Message:", query)
+    print("User Chat History:", chat_history)
 
-        # Send the message to OpenAI
-        prompt = query
-        completion = client.chat.completions.create(
-            model="gpt-4o",  # You can use other models like "gpt-3.5-turbo" as well
-            messages=[{"role": "user", "content": prompt}],
-            temperature=0.7
-        )
+    # Send the message to OpenAI
+    prompt = query
+    completion = client.chat.completions.create(
+        model="gpt-4o",  # You can use other models like "gpt-3.5-turbo" as well
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7
+    )
 
-        # Extract the output
-        z = completion.choices[0].message.content
+    # Extract the output
+    z = completion.choices[0].message.content
 
-        return z
+    return z
 
-    except Exception as e:
-        print(f"Unexpected Error: {e}")
-        return "An unexpected error occurred. Please try again later."
-    
 
 # Function to Send LLM ANSWER to Slack
 def send_slack_message(channel, text):
