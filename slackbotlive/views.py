@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from django.shortcuts import render
 from .models import cs
-from openai import OpenAI
+import openai
 import os
 import requests
 
@@ -27,33 +27,36 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Function to generate LLM answer using OpenAI API
 def get_openai_response(query, chat_history):
-
-    #Option 1
     """Calls OpenAI API to get a response for the query."""
-    
-    # # Set the OpenAI API key
-    # api_key = OPENAI_API_KEY
-    # OpenAI.api_key = api_key
-    # client = OpenAI()  # Remove 'proxies' argument here
 
-    # print("User Message:", query)
-    # print("User Chat History:", chat_history)
+    # Ensure OpenAI API key is set
+    api_key = OPENAI_API_KEY  
+    if not api_key:
+        raise ValueError("Missing OpenAI API Key!")
 
-    # # Send the message to OpenAI
-    # prompt = query
-    # completion = client.chat.completions.create(
-    #     model="gpt-4",  # Ensure you're using the correct model name
-    #     messages=[{"role": "user", "content": prompt}],
-    #     temperature=0.7
-    # )
+    print("User Message:", query)
+    print("User Chat History:", chat_history)
 
-    # # Extract the output
-    # response_text = completion.choices[0].message["content"]  # Fixed access to response content
+    # Use OpenAI's completion API correctly
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",  # Ensure you're using the correct model name
+            messages=[{"role": "user", "content": query}],
+            temperature=0.7,
+            api_key=api_key  # Explicitly pass API key
+        )
 
-    # return response_text
+        # Extract the response text
+        response_text = response["choices"][0]["message"]["content"]
+
+        return response_text
+
+    except openai.error.OpenAIError as e:
+        print("Error with OpenAI API:", str(e))
+        return "An error occurred while fetching a response."
 
     #Option 2
-    return "DeFAULT MESSAGE"
+    #return "DeFAULT MESSAGE"
 
 # Function to Send LLM ANSWER to Slack
 def send_slack_message(channel, text):
