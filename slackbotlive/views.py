@@ -22,31 +22,30 @@ HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 def get_llama3_response(user_input, history):
 
     #OPTION 1 : HUGGING FACE
-    # """Sends user input and past context to Hugging Face API once. If it fails, returns 'NA'."""
-    # headers = {"Authorization": f"Bearer {HUGGINGFACE_TOKEN}"}
-    # payload = {
-    #     "inputs": user_input,
-    #     "parameters": {"max_new_tokens": 200, "temperature": 0.7},
-    #     "history": history  # ✅ Pass previous context to API
-    # }
+    """Sends user input and past context to Hugging Face API once. If it fails, returns 'NA'."""
+    headers = {"Authorization": f"Bearer {HUGGINGFACE_TOKEN}"}
+    payload = {
+        "inputs": user_input,
+        "parameters": {"max_new_tokens": 200, "temperature": 0.7},
+        "history": history  # ✅ Pass previous context to API
+    }
 
-    # try:
-    #     response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload, timeout=60)
-    #     response_data = response.json()
+    try:
+        response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload, timeout=60)
+        response_data = response.json()
 
-    #     # ✅ Handle Hugging Face errors
-    #     if isinstance(response_data, dict) and "error" in response_data:
-    #         return "NA"
+        # ✅ Handle Hugging Face errors
+        if isinstance(response_data, dict) and "error" in response_data:
+            print(f"Hugging Face API Error: {response_data['error']}")
+            return "I'm unable to provide an answer at the moment. Please try again later."
+        
+        # ✅ Extract response text from list
+        if isinstance(response_data, list) and len(response_data) > 0 and "generated_text" in response_data[0]:
+            return response_data[0]["generated_text"]
 
-    #     # ✅ Extract response text from list
-    #     if isinstance(response_data, list) and len(response_data) > 0 and "generated_text" in response_data[0]:
-    #         return response_data[0]["generated_text"]
-
-    # except requests.exceptions.RequestException as e:
-    #     print(f"Request error: {e}")
-
-    #OPTION 2 : DEFAULT ANSWER
-    return "DEFAULT ANSWER IS SETUP"
+    except requests.exceptions.RequestException as e:
+        print(f"Request error: {e}")
+        return "I'm unable to provide an answer at the moment. Please try again later."
 
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
