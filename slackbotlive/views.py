@@ -123,7 +123,7 @@ def slack_event_listener(request):
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
         print("User Input Message:", user_message)
-        print("User Last 5 chat history:", history)
+        print("User Last 5 Chat history:", history)
 
         # Send user input + history to Hugging Face
         bot_response = get_llama3_response(user_message, history)
