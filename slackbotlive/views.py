@@ -27,52 +27,29 @@ event_cache = set()
 
 # Function to generate LLM answer using OpenAI API
 def get_openai_response(query, chat_history):
-    """Calls OpenAI API to get a response for the query, including chat history."""
+    """Calls OpenAI API to get a response for the query."""
     
-    # Set the OpenAI API key
-    OpenAI.api_key = OPENAI_API_KEY
-    client = OpenAI()
-
-    # Prepare the messages with chat history
-    messages = []
-    
-    # Add history to messages in the format OpenAI expects
-    for item in chat_history:
-        messages.append({"role": "user", "content": item['user']})
-        messages.append({"role": "assistant", "content": item['bot']})
-
-    # Add the new query from the user
-    messages.append({"role": "user", "content": query})
-    
-    print("User Message:", query)
-    print("User Last 5 Chat History:", chat_history)
-    print("Send Message:", messages)
-
-    # Call OpenAI API for completion
     try:
+        # Set the OpenAI API key
+        api_key = OPENAI_API_KEY
+        OpenAI.api_key = api_key
+        client = OpenAI()
+
+        print("User Message:", query)
+        print("User Chat History:", chat_history)
+
+        # Send the message to OpenAI
+        prompt = query
         completion = client.chat.completions.create(
             model="gpt-4o",  # You can use other models like "gpt-3.5-turbo" as well
-            messages=messages,
+            messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
 
-        # Extract the response text
-        generated_text = completion.choices[0].message.content.strip()
+        # Extract the output
+        z = completion.choices[0].message.content
 
-        # If no valid response, set default error message
-        if not generated_text:
-            print("Error: No generated text in response.")
-            return "I'm sorry, but I couldn't generate a response at the moment. Please try again."
-
-        # Ensure response is within 200 words and does not cut sentences
-        words = generated_text.split()
-        if len(words) > 200:
-            truncated_response = " ".join(words[:200])
-            if "." in truncated_response:
-                truncated_response = truncated_response.rsplit(".", 1)[0] + "."  # Ensure a full sentence
-            return truncated_response
-
-        return generated_text
+        return z
 
     except Exception as e:
         print(f"Unexpected Error: {e}")
