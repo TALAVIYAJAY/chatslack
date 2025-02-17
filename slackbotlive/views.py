@@ -17,56 +17,55 @@ SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_SIGNING_SECRET = os.getenv("SLACK_SIGNING_SECRET")
 HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Cache to store processed event IDs
 event_cache = set()
 
 # Function to generate LLM ANSWER
-def get_llama3_response(query, chat_history):
-    """Calls the Hugging Face API to get a response for the query, including chat history."""
+import openai
+import os
+import requests
+
+# Function to generate LLM answer using OpenAI API
+def get_openai_response(query, chat_history):
+    """Calls OpenAI API to get a response for the query, including chat history."""
 
     print("User Message:", query)
     print('\n----------------------\n')
     print("User Last 5 chat history:", chat_history)
     print('\n----------------------\n')
 
-    parameters = {
-        "max_new_tokens": 5000,
-        "temperature": 0.01,
-        "top_k": 50,
-        "top_p": 0.95,
-        "return_full_text": False
-    }
-
-    # Format chat history for prompt
-    history_text = ""
+    # Ensure API key is set
+    openai.api_key = OPENAI_API_KEY
+    
+    # Prepare the messages with chat history
+    messages = []
+    
+    # Add history to messages in the format OpenAI expects
     for item in chat_history:
-        history_text += f"<|start_header_id|>user<|end_header_id|> {item['user']}<|eot_id|>\n"
-        history_text += f"<|start_header_id|>assistant<|end_header_id|> {item['bot']}<|eot_id|>\n"
+        messages.append({"role": "user", "content": item['user']})
+        messages.append({"role": "assistant", "content": item['bot']})
 
-    # Construct the final prompt with chat history
-    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
-You are a helpful and smart assistant. You accurately provide answers to the provided user query.<|eot_id|>
-{history_text}
-<|start_header_id|>user<|end_header_id|> Here is the query: ```{query}```.
-Provide a precise and concise answer in less than 200 words. Ensure sentences are complete and not cut off mid-word.<|eot_id|>
-<|start_header_id|>assistant<|end_header_id|>"""
+    # Add the new query from the user
+    messages.append({"role": "user", "content": query})
+    
+    print("Send Message:",messages)
 
-    headers = {
-        'Authorization': f'Bearer {HUGGINGFACE_TOKEN}',
-        'Content-Type': 'application/json'
-    }
-    payload = {"inputs": prompt, "parameters": parameters}
-
+    # Call OpenAI API for completion
     try:
-        response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload, timeout=30)
-        response.raise_for_status()
-        
-        # Ensure response is valid JSON
-        response_data = response.json()
-        
-        # Extract response text safely
-        generated_text = response_data[0].get('generated_text', "").strip() if response_data else ""
+        response = openai.ChatCompletion.create(
+            model="gpt-4",  # You can use other models like "gpt-3.5-turbo" as well
+            messages=messages,
+            temperature=0.7,
+            max_tokens=500,
+            top_p=0.95,
+            frequency_penalty=0,
+            presence_penalty=0,
+        )
+
+        # Extract the response text
+        generated_text = response['choices'][0]['message']['content'].strip()
 
         # If no valid response, set default error message
         if not generated_text:
@@ -83,15 +82,14 @@ Provide a precise and concise answer in less than 200 words. Ensure sentences ar
 
         return generated_text
 
-    except requests.exceptions.RequestException as req_err:
-        print(f"Request Error: {req_err}")
-    except KeyError as key_err:
-        print(f"Key Error: {key_err}")
+    except openai.error.OpenAIError as err:
+        print(f"OpenAI API Error: {err}")
     except Exception as e:
         print(f"Unexpected Error: {e}")
 
     # Return a fallback response if an error occurs
     return "I'm sorry, but I'm unable to process your request at the moment. Please try again later."
+
 
 # Function to Send LLM ANSWER to Slack
 def send_slack_message(channel, text):
@@ -174,7 +172,7 @@ def slack_event_listener(request):
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
         # Send user input to Hugging Face API
-        bot_response = get_llama3_response(user_message,history)
+        bot_response = get_openai_response(user_message,history)
         print("Generated Bot Response:", bot_response)
 
         # Save conversation to PostgreSQL
