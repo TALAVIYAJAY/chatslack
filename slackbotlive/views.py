@@ -21,15 +21,14 @@ HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 # Cache to store processed event IDs
 event_cache = set()
 
-
-def get_llama3_response(query,chat_history):
+def get_llama3_response(query, chat_history):
+    """Calls the Hugging Face API to get a response for the query, including chat history."""
 
     print("User Message:", query)
     print('\n----------------------\n')
     print("User Last 5 chat history:", chat_history)
     print('\n----------------------\n')
 
-    """Calls the Hugging Face API to get a response for the query."""
     parameters = {
         "max_new_tokens": 5000,
         "temperature": 0.01,
@@ -37,8 +36,17 @@ def get_llama3_response(query,chat_history):
         "top_p": 0.95,
         "return_full_text": False
     }
+
+    # Format chat history for prompt
+    history_text = ""
+    for item in chat_history:
+        history_text += f"<|start_header_id|>user<|end_header_id|> {item['user']}<|eot_id|>\n"
+        history_text += f"<|start_header_id|>assistant<|end_header_id|> {item['bot']}<|eot_id|>\n"
+
+    # Construct the final prompt with chat history
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 You are a helpful and smart assistant. You accurately provide answers to the provided user query.<|eot_id|>
+{history_text}
 <|start_header_id|>user<|end_header_id|> Here is the query: ```{query}```.
 Provide a precise and concise answer.<|eot_id|>
 <|start_header_id|>assistant<|end_header_id|>"""
