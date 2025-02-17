@@ -6,10 +6,6 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from django.shortcuts import render
 from .models import cs
-import logging
-
-# Initialize logging
-logger = logging.getLogger(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -50,12 +46,12 @@ Provide a precise and concise answer.<|eot_id|>
         response_data = response.json()
         return response_data[0]['generated_text'].strip() if 'generated_text' in response_data[0] else "Error in API response."
     except Exception as e:
-        print("Error:",e)
+        print("Error:", e)
         return "I am unable to provide an answer at the moment. Please try again later."
 
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
-    logger.debug("Sending message to Slack: %s", text)
+    print("Sending message to Slack:", text)
     url = "https://slack.com/api/chat.postMessage"
     headers = {
         "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
@@ -68,10 +64,10 @@ def send_slack_message(channel, text):
     try:
         response = requests.post(url, headers=headers, json=payload)
         response_data = response.json()
-        logger.debug("Slack Response: %s", response_data)
+        print("Slack Response:", response_data)
         return response_data
     except requests.exceptions.RequestException as e:
-        logger.error("Error sending message to Slack: %s", e)
+        print("Error sending message to Slack:", e)
         return {"error": "Failed to send message to Slack"}
 
 
@@ -81,7 +77,7 @@ def slack_event_listener(request):
     try:
         # Log raw request body for debugging
         raw_body = request.body.decode("utf-8")
-        logger.debug("Raw Request Body: %s", raw_body)
+        print("Raw Request Body:", raw_body)
 
         # Handle empty request body
         if not raw_body:
@@ -110,11 +106,11 @@ def slack_event_listener(request):
 
         # Ignore system messages (join/leave events)
         if "has joined the channel" in user_message.lower() or "has left the channel" in user_message.lower():
-            logger.info(f"Ignored system message: {user_message}")
+            print(f"Ignored system message: {user_message}")
             return JsonResponse({"status": "ignored"})
 
-        logger.info("Received Slack Message from User ID: %s", user_id)
-        logger.info("User Message: %s", user_message)
+        print("Received Slack Message from User ID:", user_id)
+        print("User Message:", user_message)
 
         # Fetch last 5 conversations from PostgreSQL
         last_5_conversations = cs.objects.filter(user_id=user_id).order_by('-created_at')[:5]
@@ -125,12 +121,12 @@ def slack_event_listener(request):
         # Format history for Llama3 API
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
-        logger.info("User Input Message: %s", user_message)
-        logger.info("User Last 5 chat history: %s", history)
+        print("User Input Message:", user_message)
+        print("User Last 5 chat history:", history)
 
         # Send user input + history to Hugging Face
         bot_response = get_llama3_response(user_message, history)
-        logger.info("Generated Bot Response: %s", bot_response)
+        print("Generated Bot Response:", bot_response)
 
         # Save conversation to PostgreSQL
         cs.objects.create(user_id=user_id, user_input=user_message, bot_response=bot_response)
@@ -141,7 +137,7 @@ def slack_event_listener(request):
         return JsonResponse({"status": "ok"})
 
     except Exception as e:
-        logger.error(f"Slack Event Error: {e}")
+        print(f"Slack Event Error: {e}")
         return JsonResponse({"error": str(e)}, status=500)
 
 
@@ -174,10 +170,10 @@ def slack_oauth_callback(request):
         access_token = response_data.get("access_token")
         team_name = response_data.get("team", {}).get("name")
 
-        logger.info(f"Slack OAuth Success: {team_name} - Token: {access_token}")
+        print(f"Slack OAuth Success: {team_name} - Token: {access_token}")
 
         return HttpResponseRedirect("/")  # Redirect to home after successful login
 
     except requests.exceptions.RequestException as e:
-        logger.error(f"OAuth Request Error: {e}")
+        print(f"OAuth Request Error: {e}")
         return JsonResponse({"error": "OAuth request failed"}, status=500)
