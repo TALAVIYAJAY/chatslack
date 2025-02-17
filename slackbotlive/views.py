@@ -41,7 +41,11 @@ def get_llama3_response(user_input, history):
         
         # ✅ Extract response text from list
         if isinstance(response_data, list) and len(response_data) > 0 and "generated_text" in response_data[0]:
-            return response_data[0]["generated_text"]
+            generated_text = response_data[0]["generated_text"]
+            
+            # ✅ Ensure the response is within 200 words
+            words = generated_text.split()
+            return " ".join(words[:200])  # Trim to first 200 words if necessary
 
     except requests.exceptions.RequestException as e:
         print(f"Request error: {e}")
