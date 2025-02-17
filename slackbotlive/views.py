@@ -20,32 +20,48 @@ HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 
 def get_llama3_response(user_input, history):
+    """Sends user input and past context to Hugging Face API, with a fallback for errors."""
+    
+    # Constructing the prompt with previous context (history)
+    prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
+You are a helpful and intelligent assistant. Provide a concise and accurate response to the user's query.<|eot_id|>
+<|start_header_id|>user<|end_header_id|> Here is the query: ```{user_input}```.
+<|start_header_id|>history<|end_header_id|> Previous interactions: {history}.
+Provide a brief and precise answer within 200 words.<|eot_id|>"""
+    
+    # Request parameters
+    parameters = {
+        "max_new_tokens": 500,  # Control length of response
+        "temperature": 0.7,
+        "top_k": 50,
+        "top_p": 0.95,
+        "return_full_text": False
+    }
 
-    #OPTION 1 : HUGGING FACE
-    """Sends user input and past context to Hugging Face API once. If it fails, returns 'NA'."""
-    headers = {"Authorization": f"Bearer {HUGGINGFACE_TOKEN}"}
+    headers = {
+        'Authorization': f'Bearer {HUGGINGFACE_TOKEN}',
+        'Content-Type': 'application/json'
+    }
+    
     payload = {
-        "inputs": user_input,
-        "parameters": {"max_new_tokens": 200, "temperature": 0.7},
-        "history": history  # ✅ Pass previous context to API
+        "inputs": prompt,
+        "parameters": parameters
     }
 
     try:
-        response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload, timeout=60)
+        response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload)
+        response.raise_for_status()  # Ensure successful request
         response_data = response.json()
 
-        # ✅ Handle Hugging Face errors
-        if isinstance(response_data, dict) and "error" in response_data:
-            print(f"Hugging Face API Error: {response_data['error']}")
-            return "I'm unable to provide an answer at the moment. Please try again later."
-        
-        # ✅ Extract response text from list
-        if isinstance(response_data, list) and len(response_data) > 0 and "generated_text" in response_data[0]:
-            generated_text = response_data[0]["generated_text"]
+        # Handle Hugging Face API response and errors
+        if 'generated_text' in response_data[0]:
+            generated_text = response_data[0]['generated_text'].strip()
             
-            # ✅ Ensure the response is within 200 words
+            # Ensure the response is within 200 words
             words = generated_text.split()
-            return " ".join(words[:200])  # Trim to first 200 words if necessary
+            return " ".join(words[:200])  # Truncate to first 200 words
+
+        return "An error occurred while processing the response."
 
     except requests.exceptions.RequestException as e:
         print(f"Request error: {e}")
