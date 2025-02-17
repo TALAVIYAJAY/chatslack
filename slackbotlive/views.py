@@ -26,7 +26,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 event_cache = set()
 
 # Function to generate LLM answer using OpenAI API
-def llm(query, chat_history):
+def get_openai_response(query, chat_history):
     """Calls OpenAI API to get a response for the query, including chat history."""
     
     # Set the OpenAI API key
