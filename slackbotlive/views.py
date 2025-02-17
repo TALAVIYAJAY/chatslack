@@ -27,7 +27,7 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Function to generate LLM answer using OpenAI API
 def get_openai_response(query, chat_history):
-    """Fetches response from OpenAI using SDK."""
+    """Fetch response from OpenAI using the latest SDK."""
     
     if not OPENAI_API_KEY:
         raise ValueError("Missing OpenAI API Key!")
@@ -36,20 +36,24 @@ def get_openai_response(query, chat_history):
     print("User Chat History:", chat_history)
 
     try:
-        openai.api_key = OPENAI_API_KEY  # ✅ Set API key properly
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)  # ✅ Correct initialization
 
-        response = openai.ChatCompletion.create(  # ✅ Use correct method
+        response = client.chat.completions.create(  # ✅ Updated method
             model="gpt-4-turbo",  
             messages=[{"role": "user", "content": query}],
             temperature=0.7
         )
 
-        response_text = response["choices"][0]["message"]["content"]
+        response_text = response.choices[0].message.content  # ✅ Correct response parsing
         return response_text
 
-    except Exception as e:  # ✅ Catch generic exception if openai.OpenAIError doesn't work
+    except openai.OpenAIError as e:  # ✅ Correct exception handling
         print("Error with OpenAI API:", str(e))
         return "An error occurred while fetching a response."
+
+    except Exception as e:
+        print("Unexpected Error:", str(e))
+        return "An error occurred while processing your request."
 
     #Option 2
     #return "DeFAULT MESSAGE"
