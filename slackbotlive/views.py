@@ -74,9 +74,15 @@ def get_openai_response(query, chat_history):
         # Parse the response JSON
         response_data = json.loads(result.stdout)
 
-        # Extract the response text
-        response_text = response_data["choices"][0]["message"]["content"]
-        return response_text
+        # Print the full response to debug
+        print("API Response:", json.dumps(response_data, indent=2))
+
+        # Extract the response text if 'choices' key exists
+        if "choices" in response_data:
+            response_text = response_data["choices"][0]["message"]["content"]
+            return response_text
+        else:
+            raise Exception("API response does not contain 'choices' key.")
 
     except subprocess.CalledProcessError as e:
         print("Error with curl command:", str(e))
