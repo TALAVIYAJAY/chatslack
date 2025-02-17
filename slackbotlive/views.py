@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from django.shortcuts import render
 from .models import cs
-import openai
+from openai import OpenAI
 import os
 import requests
 
@@ -26,20 +26,12 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 event_cache = set()
 
 # Function to generate LLM answer using OpenAI API
-def get_openai_response(query, chat_history):
+def llm(query, chat_history):
     """Calls OpenAI API to get a response for the query, including chat history."""
     
-    # Ensure API key is set
-    if not OPENAI_API_KEY:
-        print("Error: OPENAI_API_KEY is not set.")
-        return "API key is missing. Please check the environment variable."
-
-    openai.api_key = OPENAI_API_KEY
-
-    print("User Message:", query)
-    print('\n----------------------\n')
-    print("User Last 5 Chat History:", chat_history)
-    print('\n----------------------\n')
+    # Set the OpenAI API key
+    OpenAI.api_key = OPENAI_API_KEY
+    client = OpenAI()
 
     # Prepare the messages with chat history
     messages = []
@@ -52,22 +44,20 @@ def get_openai_response(query, chat_history):
     # Add the new query from the user
     messages.append({"role": "user", "content": query})
     
+    print("User Message:", query)
+    print("User Last 5 Chat History:", chat_history)
     print("Send Message:", messages)
 
     # Call OpenAI API for completion
     try:
-        response = openai.ChatCompletion.create(
+        completion = client.chat.completions.create(
             model="gpt-4",  # You can use other models like "gpt-3.5-turbo" as well
             messages=messages,
-            temperature=0.7,
-            max_tokens=500,
-            top_p=0.95,
-            frequency_penalty=0,
-            presence_penalty=0,
+            temperature=0.7
         )
 
         # Extract the response text
-        generated_text = response['choices'][0]['message']['content'].strip()
+        generated_text = completion.choices[0].message.content.strip()
 
         # If no valid response, set default error message
         if not generated_text:
@@ -84,13 +74,10 @@ def get_openai_response(query, chat_history):
 
         return generated_text
 
-    except openai.error.OpenAIError as err:
-        print(f"OpenAI API Error: {err}")
-        return "There was an issue with the OpenAI API. Please try again later."
     except Exception as e:
         print(f"Unexpected Error: {e}")
         return "An unexpected error occurred. Please try again later."
-
+    
 
 # Function to Send LLM ANSWER to Slack
 def send_slack_message(channel, text):
