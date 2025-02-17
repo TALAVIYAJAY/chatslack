@@ -34,7 +34,7 @@ def get_openai_response(query, chat_history):
 
     print("User Message:", query)
     print("User Chat History:", chat_history)
-
+    print("openai key:", OPENAI_API_KEY)
     try:
         client = openai.OpenAI(api_key=OPENAI_API_KEY)  # ✅ Correct initialization
 
