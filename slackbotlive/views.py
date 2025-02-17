@@ -31,10 +31,10 @@ def get_llama3_response(query, chat_history):
     print('\n----------------------\n')
 
     parameters = {
-        "max_new_tokens": 5000,
-        "temperature": 0.01,
-        "top_k": 50,
-        "top_p": 0.95,
+        "max_new_tokens": 1000,  # Increase max tokens
+        "temperature": 0.7,  # Relax the temperature for more varied responses
+        "top_k": 50,  # Can try increasing or decreasing this for varied results
+        "top_p": 0.9,  # Relax the top_p for broader responses
         "return_full_text": False
     }
 
