@@ -6,7 +6,6 @@ from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from django.shortcuts import render
 from .models import cs
-from django.core.cache import cache  # Use Django's cache system to store processed event IDs
 
 # Load environment variables
 load_dotenv()
@@ -111,14 +110,6 @@ def slack_event_listener(request):
         if "has joined the channel" in user_message.lower() or "has left the channel" in user_message.lower():
             print(f"Ignored system message: {user_message}")
             return JsonResponse({"status": "ignored"})
-
-        # Check if this event has been processed recently to avoid duplicates
-        if cache.get(event_id):
-            print(f"Duplicate event detected: {event_id}. Ignoring...")
-            return JsonResponse({"status": "ignored"})
-
-        # Mark the event as processed by storing its ID in the cache for a short period
-        cache.set(event_id, "processed", timeout=60)  # Set timeout (e.g., 60 seconds)
 
         print("Received Slack Message from User ID:", user_id)
         print("User Message:", user_message)
