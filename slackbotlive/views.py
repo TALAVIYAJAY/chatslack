@@ -20,17 +20,14 @@ HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 
 def get_llama3_response(user_input, history):
-    """Generates a response based on the user input, without using the history for response generation."""
-    
-    # Constructing the prompt with just the user input (no history context)
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|> 
-You are a helpful and intelligent assistant. Provide a concise and accurate response to the user's query.<|eot_id|>
-<|start_header_id|>user<|end_header_id|> Here is the query: ```{user_input}```.
-Provide a brief and precise answer within 200 words, avoiding repetition.<|eot_id|>"""
+    You are a helpful and intelligent assistant. Provide a concise and accurate response to the user's query.<|eot_id|>
+    <|start_header_id|>user<|end_header_id|> Here is the query: ```{user_input}```.
+    Provide a brief and precise answer within 200 words, avoiding repetition.<|eot_id|>"""
 
     # Request parameters
     parameters = {
-        "max_new_tokens": 500,  # Control length of response
+        "max_new_tokens": 500,
         "temperature": 0.7,
         "top_k": 50,
         "top_p": 0.95,
@@ -52,14 +49,18 @@ Provide a brief and precise answer within 200 words, avoiding repetition.<|eot_i
         response.raise_for_status()  # Ensure successful request
         response_data = response.json()
 
-        # Handle Hugging Face API response and errors
+        # Log the full response to see what the API returns
+        print("Full Response from Hugging Face:", response_data)
+
         if 'generated_text' in response_data[0]:
             generated_text = response_data[0]['generated_text'].strip()
-            
-            # Ensure the response is within 200 words
+
+            if not generated_text:
+                print("Error: No generated text received from Hugging Face.")
+                return "I'm unable to generate a response right now."
+
             words = generated_text.split()
             truncated_text = " ".join(words[:200])  # Truncate to first 200 words
-            
             return truncated_text
 
         return "An error occurred while processing the response."
@@ -67,6 +68,7 @@ Provide a brief and precise answer within 200 words, avoiding repetition.<|eot_i
     except requests.exceptions.RequestException as e:
         print(f"Request error: {e}")
         return "I'm unable to provide an answer at the moment. Please try again later."
+
 
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
