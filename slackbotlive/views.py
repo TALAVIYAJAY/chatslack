@@ -112,6 +112,8 @@ def slack_event_listener(request):
         # Parse JSON safely
         try:
             data = json.loads(raw_body)
+            logger.debug("Received Slack Event: %s", data)
+
         except json.JSONDecodeError:
             return JsonResponse({"error": "Invalid JSON received"}, status=400)
 
