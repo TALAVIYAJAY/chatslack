@@ -59,7 +59,7 @@ Provide a precise and concise answer in less than 200 words. Ensure sentences ar
     payload = {"inputs": prompt, "parameters": parameters}
 
     try:
-        response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload)
+        response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload, timeout=30)
         response.raise_for_status()
         
         # Ensure response is valid JSON
