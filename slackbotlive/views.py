@@ -72,7 +72,8 @@ Provide a precise and concise answer in less than 200 words. Ensure sentences ar
             return truncated_response
         return generated_text
     except Exception as e:
-        return f"An error occurred: {e}"
+        print(f"Error occurred: {e}")
+        return "I'm sorry, but I'm unable to process your request at the moment. Please try again later."
 
 
 def send_slack_message(channel, text):
