@@ -101,7 +101,7 @@ To add the bot to your Slack channel, type the following command:
 ```
 Setup Example Question to Ask the Droid: 
 ```sh
-@Jay_Talaviya's Droid explain Law of Thermodynamics
+Explain Law of Thermodynamics
 ```
 
 ## **Demo Video 🎥**  
