@@ -66,11 +66,14 @@ python manage.py runserver
 The app is already deployed! You can check it out here:  
 📌 **[Live Demo on Render](https://chat-slack-live.onrender.com/)**  
 
+## **Add Jay_Talaviya's Droid to a Slack channel**  
+/invite @Jay_Talaviya's Droid
+@Jay_Talaviya's What is machine learning?
+
 ## **How It Works**  
-1. **Add Jay_Talaviya's Droid to a Slack channel** and mention it with a question.  
-2. The bot **retrieves the last 5 messages** in the conversation (including bot responses).  
-3. It sends the complete chat history to **LLaMA 3 on Hugging Face** for a contextual AI-generated reply.  
-4. The bot **posts the response** back in the Slack channel.  
+1. The bot **retrieves the last 5 messages** in the conversation (including bot responses).  
+2. It sends the complete chat history to **LLaMA 3 on Hugging Face** for a contextual AI-generated reply.  
+3. The bot **posts the response** back in the Slack channel.  
 
 ## **Demo Video 🎥**  
 📌 **[Watch the chatbot in action](INSERT_VIDEO_DEMO_LINK_HERE)**  
