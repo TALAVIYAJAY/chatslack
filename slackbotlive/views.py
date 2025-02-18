@@ -1,6 +1,7 @@
 import os
 import json
 import requests
+import time
 from django.http import JsonResponse, HttpResponseRedirect
 from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
@@ -20,7 +21,9 @@ event_cache = set()
 
 # Function to generate LLM ANSWER
 def get_llama3_response(query, chat_history):
-    """Calls the Hugging Face API to get a response for the query, including chat history."""
+    """Calls the Hugging Face API to get a response for the query, including chat history.
+       Retries up to 3 times if the response is empty.
+    """
 
     print("User Message:", query)
     print('\n----------------------\n')
@@ -30,8 +33,8 @@ def get_llama3_response(query, chat_history):
     parameters = {
         "max_new_tokens": 1000,  # Increase max tokens
         "temperature": 0.7,  # Relax the temperature for more varied responses
-        "top_k": 50,  # Can try increasing or decreasing this for varied results
-        "top_p": 0.9,  # Relax the top_p for broader responses
+        "top_k": 50,
+        "top_p": 0.9,
         "return_full_text": False
     }
 
@@ -55,38 +58,45 @@ Provide a precise and concise answer in less than 50 words. Ensure sentences are
     }
     payload = {"inputs": prompt, "parameters": parameters}
 
-    try:
-        response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload, timeout=30)
-        response.raise_for_status()
-        
-        # Ensure response is valid JSON
-        response_data = response.json()
-        print("Full API Response:", response_data)  # Log the full response for better debugging
-        
-        # Extract response text safely
-        generated_text = response_data[0].get('generated_text', "").strip() if response_data else ""
-        if not generated_text:
-            print("Error: No generated text in response.")
-            return "I'm sorry, but I couldn't generate a response at the moment. Please try again."
+    max_retries = 3  # Maximum retry attempts
+    retry_delay = 2  # Delay between retries (in seconds)
 
-        # Ensure response is within 50 words and does not cut sentences
-        words = generated_text.split()
-        if len(words) > 50:
-            truncated_response = " ".join(words[:50])
-            if "." in truncated_response:
-                truncated_response = truncated_response.rsplit(".", 1)[0] + "."  # Ensure a full sentence
-            return truncated_response
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(HUGGINGFACE_MODEL_URL, headers=headers, json=payload, timeout=30)
+            response.raise_for_status()
+            
+            response_data = response.json()
+            print(f"Attempt {attempt + 1}: Full API Response:", response_data)  # Log the response
+            
+            # Extract response text safely
+            generated_text = response_data[0].get('generated_text', "").strip() if response_data else ""
 
-        return generated_text
+            # If a valid response is found, return it
+            if generated_text:
+                # Ensure response is within 50 words and does not cut sentences
+                words = generated_text.split()
+                if len(words) > 50:
+                    truncated_response = " ".join(words[:50])
+                    if "." in truncated_response:
+                        truncated_response = truncated_response.rsplit(".", 1)[0] + "."  # Ensure full sentence
+                    return truncated_response
+                return generated_text
 
-    except requests.exceptions.RequestException as req_err:
-        print(f"Request Error: {req_err}")
-    except KeyError as key_err:
-        print(f"Key Error: {key_err}")
-    except Exception as e:
-        print(f"Unexpected Error: {e}")
+        except requests.exceptions.RequestException as req_err:
+            print(f"Request Error (Attempt {attempt + 1}): {req_err}")
+        except KeyError as key_err:
+            print(f"Key Error (Attempt {attempt + 1}): {key_err}")
+        except Exception as e:
+            print(f"Unexpected Error (Attempt {attempt + 1}): {e}")
 
-    # Return a fallback response if an error occurs
+        # If the response was blank, retry after a small delay
+        if attempt < max_retries - 1:
+            print(f"Retrying in {retry_delay} seconds...")
+            time.sleep(retry_delay)
+
+    # If all retries fail, return a fallback response
+    print("All attempts failed, returning fallback response.")
     return "I'm sorry, but I'm unable to process your request at the moment. Please try again later."
 
 # Function to Send LLM ANSWER to Slack
