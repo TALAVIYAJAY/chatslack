@@ -20,10 +20,7 @@ Jay_Talaviya's Droid is an AI-powered Slack chatbot that listens to tagged quest
 
 ## **Setup & Installation**  
 
-### **1. Install Jay_Talaviya's Droid in Your Slack Workspace**  
-📌 **[Click here to install Jay_Talaviya's Droid in your Slack workspace](INSERT_SLACK_APP_INSTALLATION_LINK_HERE)**  
-
-### **2. Run the Project Locally**  
+### **Run the Project Locally**  
 #### **Prerequisites**  
 - Python 3.x  
 - PostgreSQL  
@@ -65,7 +62,7 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-### **3. Deploy on Render**  
+## **Jay Talaviya's Droid Deployment on Render**  
 The app is already deployed! You can check it out here:  
 📌 **[Live Demo on Render](https://chat-slack-live.onrender.com/)**  
 
