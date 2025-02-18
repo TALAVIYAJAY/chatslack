@@ -1,6 +1,3 @@
-Here’s an **extraordinary** README for your project:
-
----
 
 # **Jay's Droid - Slack Chatbot** 🤖  
 
