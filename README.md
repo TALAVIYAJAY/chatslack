@@ -11,38 +11,46 @@ Jay_Talaviya's Droid is an AI-powered Slack chatbot that listens to tagged quest
 ✅ **Deployed on Render** – Fully hosted backend with a user-friendly Slack authentication page.  
 ✅ **Secure & Scalable** – Built with Django and PostgreSQL for efficient message storage and retrieval.  
 
-## **Architecture Design**  
+Your architecture design looks great! Here is the corrected presentation:
+
+---
+
+## **Architecture Design**
+
 This system consists of the following key components:
 
-User Interaction (Slack):
+### **User Interaction (Slack)**  
+- Users send messages to the Slack chatbot in a channel.
 
-Users send messages to the Slack chatbot in a channel.
-Django Backend (Deployed on Render):
+### **Django Backend (Deployed on Render)**  
+- The Django app receives and processes the Slack messages.  
+- It fetches the last 5 user-bot interactions from the PostgreSQL database for context.
 
-The Django app receives and processes the Slack messages.
-It fetches the last 5 user-bot interactions from the PostgreSQL database for context.
-PostgreSQL Database (Deployed on Render):
+### **PostgreSQL Database (Deployed on Render)**  
+- Stores chat history, including user inputs and bot responses.
 
-Stores chat history, including user inputs and bot responses.
-Hugging Face API (LLaMA 3 Model):
+### **Hugging Face API (LLaMA 3 Model)**  
+- The user query and conversation history are sent to the Hugging Face LLaMA 3 model to generate a response.
 
-The user query and conversation history are sent to the Hugging Face LLaMA 3 model to generate a response.
-Slack API (Response Delivery):
+### **Slack API (Response Delivery)**  
+- The bot's response is sent back to the Slack channel.
 
-The bot's response is sent back to the Slack channel.
+---
 
-#### **Flow**
-- User sends a message on Slack.-
-- Django backend processes the message and retrieves the last 5 conversations from PostgreSQL.
-- The query and history are sent to Hugging Face for response generation.
-- The response is sent back to Slack and saved in the database.
+#### **Flow**  
+1. User sends a message on Slack.  
+2. Django backend processes the message and retrieves the last 5 conversations from PostgreSQL.  
+3. The query and history are sent to Hugging Face for response generation.  
+4. The response is sent back to Slack and saved in the database.
+
+---
 
 #### **Tech Stack**  
 - **Backend**: Django (Python)  
 - **Database**: PostgreSQL  
 - **LLM**: Hugging Face LLaMA 3  
 - **Hosting**: Render  
-- **Messaging**: Slack API  
+- **Messaging**: Slack API
 
 ## **Setup & Installation**  
 
