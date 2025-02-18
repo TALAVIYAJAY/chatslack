@@ -20,5 +20,6 @@ from slackbotlive import views  # Import views
 
 urlpatterns = [
     path('slack/events/', views.slack_event_listener),  # Slack Event Listener
+    path('slack/oauth/callback/', views.slack_oauth_callback),  # ✅ Added OAuth Callback Route
     path('', views.home),
 ]
