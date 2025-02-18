@@ -120,14 +120,31 @@ def send_slack_message(channel, text):
         "channel": channel,
         "text": text
     }
+
     try:
+        # Check if the channel exists using conversations.info API
+        check_url = "https://slack.com/api/conversations.info"
+        check_payload = {
+            "channel": channel
+        }
+        check_response = requests.get(check_url, headers=headers, params=check_payload)
+        check_data = check_response.json()
+        
+        if not check_data.get("ok", False):
+            raise ValueError(f"Channel {channel} not found or bot lacks permission.")
+        
+        # Send the message to the valid channel
         response = requests.post(url, headers=headers, json=payload)
         response_data = response.json()
         print("Slack Response:", response_data)
         return response_data
+
     except requests.exceptions.RequestException as e:
         print("Error sending message to Slack:", e)
         return {"error": "Failed to send message to Slack"}
+    except ValueError as val_err:
+        print(val_err)
+        return {"error": str(val_err)}
 
 # Function to handle user query from slack
 @csrf_exempt
@@ -179,7 +196,7 @@ def slack_event_listener(request):
         print("Received Slack Message from User ID:", user_id)
 
         # Fetch last 5 conversations from PostgreSQL
-        last_5_conversations = cs.objects.filter(user_id=user_id,channel_id=channel).order_by('-created_at')[:5]
+        last_5_conversations = cs.objects.filter(user_id=user_id, channel_id=channel).order_by('-created_at')[:5]
 
         # Reverse order so the oldest appears first
         last_5_conversations = list(last_5_conversations)[::-1]
@@ -188,7 +205,7 @@ def slack_event_listener(request):
         history = [{"user": conv.user_input, "bot": conv.bot_response} for conv in last_5_conversations]
 
         # Send user input to Hugging Face API
-        bot_response = get_llama3_response(user_message,history)
+        bot_response = get_llama3_response(user_message, history)
         print("Generated Bot Response:", bot_response)
 
         # Save conversation to PostgreSQL Database
