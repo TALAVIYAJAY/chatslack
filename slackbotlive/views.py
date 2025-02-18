@@ -109,7 +109,7 @@ Provide a precise and concise answer in less than 100 words. Ensure sentences ar
 # Function to Send LLM ANSWER to Slack
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
-    print("Sending message to Slack Channel:", channel)
+    print("Sending message to Slack Channel ID:", channel)
     print("Sending message to Slack:", text)
     url = "https://slack.com/api/chat.postMessage"
     headers = {
