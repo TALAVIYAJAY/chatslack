@@ -1,8 +1,10 @@
 
 # **Jay_Talaviya's Droid - Slack Chatbot** 🤖  
 
+
 ## **Overview**  
 Jay_Talaviya's Droid is an AI-powered Slack chatbot that listens to tagged questions in a channel, sends the queries (along with the last 5 messages) to an LLM, and responds with AI-generated answers. The bot is built using Django, PostgreSQL, and the **Hugging Face LLaMA 3 model** for response generation.
+
 
 ## **Features**  
 ✅ **Seamless Slack Integration** – Add the bot to your Slack workspace and start chatting!  
@@ -10,6 +12,7 @@ Jay_Talaviya's Droid is an AI-powered Slack chatbot that listens to tagged quest
 ✅ **Hugging Face LLaMA 3 Powered** – Ensures high-quality AI-generated answers.  
 ✅ **Deployed on Render** – Fully hosted backend with a user-friendly Slack authentication page.  
 ✅ **Secure & Scalable** – Built with Django and PostgreSQL for efficient message storage and retrieval.  
+
 
 ## **Architecture Design**
 
@@ -90,9 +93,11 @@ python manage.py migrate
 python manage.py runserver
 ```
 
+
 ## **Jay Talaviya's Droid Deployment on Render**  
 The app is already deployed! You can check it out here:  
 📌 **[Live Demo on Render](https://chat-slack-live.onrender.com/)**  
+
 
 ## **Add Jay_Talaviya's Droid to a Slack channel**  
 To add the bot to your Slack channel, type the following command: 
@@ -104,8 +109,10 @@ Setup Example Question to Ask the Droid:
 Explain Law of Thermodynamics
 ```
 
+
 ## **Demo Video 🎥**  
 📌 **[Watch the chatbot in action](INSERT_VIDEO_DEMO_LINK_HERE)**  
+
 
 ## **Contact**  
 📧 **Email**: talaviyajay10@gmail.com 
