@@ -31,7 +31,6 @@ This system consists of the following key components:
 ### **Slack API (Response Delivery)**  
 - The bot's response is sent back to the Slack channel.
 
----
 
 #### **Flow**  
 1. User sends a message on Slack.  
@@ -39,7 +38,6 @@ This system consists of the following key components:
 3. The query and history are sent to Hugging Face for response generation.  
 4. The response is sent back to Slack and saved in the database.
 
----
 
 #### **Tech Stack**  
 - **Backend**: Django (Python)  
@@ -105,42 +103,6 @@ Setup Example Question to Ask the Droid:
 ```sh
 @Jay_Talaviya's Droid explain Law of Thermodynamics
 ```
-
-## **Architecture Design**  
-This system consists of the following key components:
-
-User Interaction (Slack):
-
-Users send messages to the Slack chatbot in a channel.
-Django Backend (Deployed on Render):
-
-The Django app receives and processes the Slack messages.
-It fetches the last 5 user-bot interactions from the PostgreSQL database for context.
-PostgreSQL Database (Deployed on Render):
-
-Stores chat history, including user inputs and bot responses.
-Hugging Face API (LLaMA 3 Model):
-
-The user query and conversation history are sent to the Hugging Face LLaMA 3 model to generate a response.
-Slack API (Response Delivery):
-
-The bot's response is sent back to the Slack channel.
-Flow:
-User sends a message on Slack.
-Django backend processes the message and retrieves the last 5 conversations from PostgreSQL.
-The query and history are sent to Hugging Face for response generation.
-The response is sent back to Slack and saved in the database.
-Technologies:
-Django (Backend)
-Slack API (User Interaction)
-Hugging Face LLaMA 3 (Language Model)
-PostgreSQL (Database)
-Render (Deployment)
-
-## **How It Works**  
-1. The bot **retrieves the last 5 messages** in the conversation (including bot responses).  
-2. It sends the complete chat history to **LLaMA 3 on Hugging Face** for a contextual AI-generated reply.  
-3. The bot **posts the response** back in the Slack channel.  
 
 ## **Demo Video 🎥**  
 📌 **[Watch the chatbot in action](INSERT_VIDEO_DEMO_LINK_HERE)**  
