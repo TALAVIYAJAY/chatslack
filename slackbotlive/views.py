@@ -27,7 +27,7 @@ def get_llama3_response(query, chat_history):
        Retries up to 3 times if the response is empty.
     """
 
-    print("User Input:", query)
+    print("User Input Message:", query)
     print('\n----------------------\n')
     print("User Last 5 Chat History:", chat_history)
     print('\n----------------------\n')
@@ -109,6 +109,7 @@ Provide a precise and concise answer in less than 100 words. Ensure sentences ar
 # Function to Send LLM ANSWER to Slack
 def send_slack_message(channel, text):
     """Sends a message to Slack."""
+    print("Sending message to Slack Channel:", channel)
     print("Sending message to Slack:", text)
     url = "https://slack.com/api/chat.postMessage"
     headers = {
