@@ -2,7 +2,7 @@ import os
 import json
 import requests
 import time
-from django.http import JsonResponse, HttpResponseRedirect
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from dotenv import load_dotenv
 from django.shortcuts import render
