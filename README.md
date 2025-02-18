@@ -1,6 +1,6 @@
 
 # **Jay_Talaviya's Droid - Slack Chatbot** 🤖  
-
+----
 ## **Overview**  
 Jay_Talaviya's Droid is an AI-powered Slack chatbot that listens to tagged questions in a channel, sends the queries (along with the last 5 messages) to an LLM, and responds with AI-generated answers. The bot is built using Django, PostgreSQL, and the **Hugging Face LLaMA 3 model** for response generation.
 
