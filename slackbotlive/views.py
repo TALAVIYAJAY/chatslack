@@ -174,7 +174,7 @@ def slack_event_listener(request):
         print("Generated Bot Response:", bot_response)
 
         # Save conversation to PostgreSQL
-        cs.objects.create(user_id=user_id, user_input=user_message, bot_response=bot_response)
+        cs.objects.create(user_id=user_id, channel_id=channel, user_input=user_message, bot_response=bot_response)
 
         # Send response to Slack
         send_slack_message(channel, bot_response)
@@ -185,7 +185,7 @@ def slack_event_listener(request):
         print(f"Slack Event Error: {e}")
         return JsonResponse({"error": str(e)}, status=500)
 
-# Function to render home page
+# Function to render home page(Default Page)
 def home(request):
     """Renders the home page with Slack instructions."""
     return render(request, 'home.html')
