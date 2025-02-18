@@ -1,8 +1,8 @@
 
-# **Jay's Droid - Slack Chatbot** 🤖  
+# **Jay_Talaviya's Droid - Slack Chatbot** 🤖  
 
 ## **Overview**  
-Jay's Droid is an AI-powered Slack chatbot that listens to tagged questions in a channel, sends the queries (along with the last 5 messages) to an LLM, and responds with AI-generated answers. The bot is built using Django, PostgreSQL, and the **Hugging Face LLaMA 3 model** for response generation.
+Jay_Talaviya's Droid is an AI-powered Slack chatbot that listens to tagged questions in a channel, sends the queries (along with the last 5 messages) to an LLM, and responds with AI-generated answers. The bot is built using Django, PostgreSQL, and the **Hugging Face LLaMA 3 model** for response generation.
 
 ## **Features**  
 ✅ **Seamless Slack Integration** – Add the bot to your Slack workspace and start chatting!  
@@ -20,8 +20,8 @@ Jay's Droid is an AI-powered Slack chatbot that listens to tagged questions in a
 
 ## **Setup & Installation**  
 
-### **1. Install Jay's Droid in Your Slack Workspace**  
-📌 **[Click here to install Jay's Droid in your Slack workspace](INSERT_SLACK_APP_INSTALLATION_LINK_HERE)**  
+### **1. Install Jay_Talaviya's Droid in Your Slack Workspace**  
+📌 **[Click here to install Jay_Talaviya's Droid in your Slack workspace](INSERT_SLACK_APP_INSTALLATION_LINK_HERE)**  
 
 ### **2. Run the Project Locally**  
 #### **Prerequisites**  
@@ -70,7 +70,7 @@ The app is already deployed! You can check it out here:
 📌 **[Live Demo on Render](https://chat-slack-live.onrender.com/)**  
 
 ## **How It Works**  
-1. **Add Jay's Droid to a Slack channel** and mention it with a question.  
+1. **Add Jay_Talaviya's Droid to a Slack channel** and mention it with a question.  
 2. The bot **retrieves the last 5 messages** in the conversation (including bot responses).  
 3. It sends the complete chat history to **LLaMA 3 on Hugging Face** for a contextual AI-generated reply.  
 4. The bot **posts the response** back in the Slack channel.  
