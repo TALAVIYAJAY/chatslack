@@ -31,13 +31,13 @@ Slack API (Response Delivery):
 
 The bot's response is sent back to the Slack channel.
 
-**Flow**
+#### **Flow**
 - User sends a message on Slack.-
 - Django backend processes the message and retrieves the last 5 conversations from PostgreSQL.
 - The query and history are sent to Hugging Face for response generation.
 - The response is sent back to Slack and saved in the database.
 
-**Tech Stack**  
+#### **Tech Stack**  
 - **Backend**: Django (Python)  
 - **Database**: PostgreSQL  
 - **LLM**: Hugging Face LLaMA 3  
