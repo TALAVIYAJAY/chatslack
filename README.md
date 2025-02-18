@@ -30,8 +30,8 @@ Jay's Droid is an AI-powered Slack chatbot that listens to tagged questions in a
 
 #### **Clone the Repository**  
 ```sh
-git clone INSERT_GITHUB_REPO_URL_HERE
-cd YOUR_PROJECT_DIRECTORY
+git clone https://github.com/TALAVIYAJAY/chatslack.git
+cd chatslack
 ```
 
 #### **Set Up Virtual Environment**  
