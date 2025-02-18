@@ -1,11 +1,8 @@
-Here’s an **extraordinary** README for your project:
 
----
-
-# **Jay's Droid - Slack Chatbot** 🤖  
+# **Jay_Talaviya's Droid - Slack Chatbot** 🤖  
 
 ## **Overview**  
-Jay's Droid is an AI-powered Slack chatbot that listens to tagged questions in a channel, sends the queries (along with the last 5 messages) to an LLM, and responds with AI-generated answers. The bot is built using Django, PostgreSQL, and the **Hugging Face LLaMA 3 model** for response generation.
+Jay_Talaviya's Droid is an AI-powered Slack chatbot that listens to tagged questions in a channel, sends the queries (along with the last 5 messages) to an LLM, and responds with AI-generated answers. The bot is built using Django, PostgreSQL, and the **Hugging Face LLaMA 3 model** for response generation.
 
 ## **Features**  
 ✅ **Seamless Slack Integration** – Add the bot to your Slack workspace and start chatting!  
@@ -23,19 +20,15 @@ Jay's Droid is an AI-powered Slack chatbot that listens to tagged questions in a
 
 ## **Setup & Installation**  
 
-### **1. Install Jay's Droid in Your Slack Workspace**  
-📌 **[Click here to install Jay's Droid in your Slack workspace](INSERT_SLACK_APP_INSTALLATION_LINK_HERE)**  
-
-### **2. Run the Project Locally**  
+### **Run the Project Locally**  
 #### **Prerequisites**  
 - Python 3.x  
 - PostgreSQL  
-- Ngrok (for local Slack testing)  
 
 #### **Clone the Repository**  
 ```sh
-git clone INSERT_GITHUB_REPO_URL_HERE
-cd YOUR_PROJECT_DIRECTORY
+git clone https://github.com/TALAVIYAJAY/chatslack.git
+cd chatslack
 ```
 
 #### **Set Up Virtual Environment**  
@@ -69,20 +62,24 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-#### **Expose the Server with Ngrok (For Local Testing)**  
+## **Jay Talaviya's Droid Deployment on Render**  
+The app is already deployed! You can check it out here:  
+📌 **[Live Demo on Render](https://chat-slack-live.onrender.com/)**  
+
+## **Add Jay_Talaviya's Droid to a Slack channel**  
+To add the bot to your Slack channel, type the following command: 
 ```sh
-ngrok http 8000
+/invite @Jay_Talaviya's Droid
+```
+Setup Example Question to Ask the Droid: 
+```sh
+@Jay_Talaviya's Droid explain Law of Thermodynamics
 ```
 
-### **3. Deploy on Render**  
-The app is already deployed! You can check it out here:  
-📌 **[Live Demo on Render](INSERT_RENDER_APP_LINK_HERE)**  
-
 ## **How It Works**  
-1. **Add Jay's Droid to a Slack channel** and mention it with a question.  
-2. The bot **retrieves the last 5 messages** in the conversation (including bot responses).  
-3. It sends the complete chat history to **LLaMA 3 on Hugging Face** for a contextual AI-generated reply.  
-4. The bot **posts the response** back in the Slack channel.  
+1. The bot **retrieves the last 5 messages** in the conversation (including bot responses).  
+2. It sends the complete chat history to **LLaMA 3 on Hugging Face** for a contextual AI-generated reply.  
+3. The bot **posts the response** back in the Slack channel.  
 
 ## **Demo Video 🎥**  
 📌 **[Watch the chatbot in action](INSERT_VIDEO_DEMO_LINK_HERE)**  
@@ -94,9 +91,8 @@ The app is already deployed! You can check it out here:
 Want to improve the chatbot? Feel free to fork the repository and submit a PR!  
 
 ## **Contact**  
-📧 **Email**: [Your Email]  
-🔗 **LinkedIn**: [Your LinkedIn Profile]  
+📧 **Email**: talaviyajay10@gmail.com 
+🔗 **LinkedIn**: https://www.linkedin.com/in/jay-talaviya-ab5b0b1b6/ 
 
----
 
-This README is **detailed, professional, and well-structured**. Let me know if you want any modifications! 🚀
+
