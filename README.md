@@ -107,12 +107,6 @@ Explain Law of Thermodynamics
 ## **Demo Video 🎥**  
 📌 **[Watch the chatbot in action](INSERT_VIDEO_DEMO_LINK_HERE)**  
 
-## **Architecture Diagram 🏗️**  
-📌 **[View the system architecture](INSERT_ARCHITECTURE_DIAGRAM_LINK_HERE)**  
-
-## **Contributing**  
-Want to improve the chatbot? Feel free to fork the repository and submit a PR!  
-
 ## **Contact**  
 📧 **Email**: talaviyajay10@gmail.com 
 🔗 **LinkedIn**: https://www.linkedin.com/in/jay-talaviya-ab5b0b1b6/ 
