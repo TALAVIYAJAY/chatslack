@@ -67,8 +67,14 @@ The app is already deployed! You can check it out here:
 📌 **[Live Demo on Render](https://chat-slack-live.onrender.com/)**  
 
 ## **Add Jay_Talaviya's Droid to a Slack channel**  
-To add the bot to your Slack channel, type the following command: /invite @Jay_Talaviya's Droid
-Setup Example Question to Ask the Droid: @Jay_Talaviya's Droid explain Law of Thermodynamics
+To add the bot to your Slack channel, type the following command: 
+```sh
+/invite @Jay_Talaviya's Droid
+```
+Setup Example Question to Ask the Droid: 
+```sh
+@Jay_Talaviya's Droid explain Law of Thermodynamics
+```
 
 ## **How It Works**  
 1. The bot **retrieves the last 5 messages** in the conversation (including bot responses).  
