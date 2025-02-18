@@ -76,7 +76,7 @@ ngrok http 8000
 
 ### **3. Deploy on Render**  
 The app is already deployed! You can check it out here:  
-📌 **[Live Demo on Render](INSERT_RENDER_APP_LINK_HERE)**  
+📌 **[Live Demo on Render](https://chat-slack-live.onrender.com/)**  
 
 ## **How It Works**  
 1. **Add Jay's Droid to a Slack channel** and mention it with a question.  
@@ -95,7 +95,7 @@ Want to improve the chatbot? Feel free to fork the repository and submit a PR!
 
 ## **Contact**  
 📧 **Email**: talaviyajay10@gmail.com 
-🔗 **LinkedIn**: [Your LinkedIn Profile]  
+🔗 **LinkedIn**: https://www.linkedin.com/in/jay-talaviya-ab5b0b1b6/ 
 
 
 
