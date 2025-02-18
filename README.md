@@ -94,9 +94,8 @@ The app is already deployed! You can check it out here:
 Want to improve the chatbot? Feel free to fork the repository and submit a PR!  
 
 ## **Contact**  
-📧 **Email**: [Your Email]  
+📧 **Email**: talaviyajay10@gmail.com 
 🔗 **LinkedIn**: [Your LinkedIn Profile]  
 
----
 
-This README is **detailed, professional, and well-structured**. Let me know if you want any modifications! 🚀
+
