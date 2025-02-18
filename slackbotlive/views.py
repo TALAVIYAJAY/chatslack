@@ -27,7 +27,7 @@ def get_llama3_response(query, chat_history):
 
     print("User Message:", query)
     print('\n----------------------\n')
-    print("User Last 5 chat history:", chat_history)
+    print("User Last 5 Chat History:", chat_history)
     print('\n----------------------\n')
 
     parameters = {
