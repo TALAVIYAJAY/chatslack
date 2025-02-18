@@ -25,7 +25,7 @@ def get_llama3_response(query, chat_history):
        Retries up to 3 times if the response is empty.
     """
 
-    print("User Message:", query)
+    print("User Query:", query)
     print('\n----------------------\n')
     print("User Last 5 Chat History:", chat_history)
     print('\n----------------------\n')
