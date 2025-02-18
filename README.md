@@ -27,7 +27,6 @@ Jay's Droid is an AI-powered Slack chatbot that listens to tagged questions in a
 #### **Prerequisites**  
 - Python 3.x  
 - PostgreSQL  
-- Ngrok (for local Slack testing)  
 
 #### **Clone the Repository**  
 ```sh
@@ -64,11 +63,6 @@ python manage.py migrate
 #### **Start the Django Server**  
 ```sh
 python manage.py runserver
-```
-
-#### **Expose the Server with Ngrok (For Local Testing)**  
-```sh
-ngrok http 8000
 ```
 
 ### **3. Deploy on Render**  
