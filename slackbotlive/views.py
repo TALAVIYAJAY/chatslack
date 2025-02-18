@@ -11,10 +11,7 @@ from .models import cs
 load_dotenv()
 
 # Slack and Hugging Face credentials
-SLACK_CLIENT_ID = os.getenv("SLACK_CLIENT_ID")
-SLACK_CLIENT_SECRET = os.getenv("SLACK_CLIENT_SECRET")
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
-SLACK_SIGNING_SECRET = os.getenv("SLACK_SIGNING_SECRET")
 HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
 HUGGINGFACE_MODEL_URL = os.getenv("HUGGINGFACE_MODEL_URL")
 
@@ -193,35 +190,4 @@ def home(request):
     """Renders the home page with Slack instructions."""
     return render(request, 'home.html')
 
-# Function to authenticate user
-def slack_oauth_callback(request):
-    """Handles OAuth callback after Slack authentication."""
-    code = request.GET.get("code")
 
-    if not code:
-        return JsonResponse({"error": "Authorization code not found"}, status=400)
-
-    token_url = "https://slack.com/api/oauth.v2.access"
-    payload = {
-        "client_id": SLACK_CLIENT_ID,
-        "client_secret": SLACK_CLIENT_SECRET,
-        "code": code
-    }
-
-    try:
-        response = requests.post(token_url, data=payload)
-        response_data = response.json()
-
-        if not response_data.get("ok"):
-            return JsonResponse({"error": response_data.get("error", "OAuth failed")}, status=400)
-
-        access_token = response_data.get("access_token")
-        team_name = response_data.get("team", {}).get("name")
-
-        print(f"Slack OAuth Success: {team_name} - Token: {access_token}")
-
-        return HttpResponseRedirect("/")  # Redirect to home after successful login
-
-    except requests.exceptions.RequestException as e:
-        print(f"OAuth Request Error: {e}")
-        return JsonResponse({"error": "OAuth request failed"}, status=500)
