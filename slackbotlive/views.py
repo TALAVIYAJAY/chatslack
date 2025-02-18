@@ -108,9 +108,10 @@ Provide a precise and concise answer in less than 100 words. Ensure sentences ar
 
 # Function to Send LLM ANSWER to Slack
 def send_slack_message(channel, text):
-    """Sends a message to Slack."""
+    """Sends a message to Slack and logs the error details if any."""
     print("Sending message to Slack Channel ID:", channel)
     print("Sending message to Slack:", text)
+    
     url = "https://slack.com/api/chat.postMessage"
     headers = {
         "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
@@ -120,31 +121,33 @@ def send_slack_message(channel, text):
         "channel": channel,
         "text": text
     }
-
+    
     try:
-        # Check if the channel exists using conversations.info API
-        check_url = "https://slack.com/api/conversations.info"
-        check_payload = {
-            "channel": channel
-        }
-        check_response = requests.get(check_url, headers=headers, params=check_payload)
-        check_data = check_response.json()
-        
-        if not check_data.get("ok", False):
-            raise ValueError(f"Channel {channel} not found or bot lacks permission.")
-        
-        # Send the message to the valid channel
         response = requests.post(url, headers=headers, json=payload)
         response_data = response.json()
-        print("Slack Response:", response_data)
-        return response_data
+
+        # Log the full response data for better insights
+        print("Slack API Response:", response_data)
+        
+        # Check if the response is successful
+        if response_data.get("ok"):
+            print("Message successfully sent.")
+            return response_data
+        else:
+            # Log the error message and other details if the response is not OK
+            error_msg = response_data.get("error", "Unknown error")
+            print(f"Error sending message to Slack: {error_msg}")
+            
+            # Additional error context: sometimes the response includes more details
+            error_details = response_data.get("response_metadata", {}).get("messages", [])
+            if error_details:
+                print("Error Details:", error_details)
+            
+            return {"error": error_msg}
 
     except requests.exceptions.RequestException as e:
-        print("Error sending message to Slack:", e)
+        print("Request Error:", e)
         return {"error": "Failed to send message to Slack"}
-    except ValueError as val_err:
-        print(val_err)
-        return {"error": str(val_err)}
 
 # Function to handle user query from slack
 @csrf_exempt
