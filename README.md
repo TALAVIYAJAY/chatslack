@@ -11,10 +11,6 @@ Jay_Talaviya's Droid is an AI-powered Slack chatbot that listens to tagged quest
 ✅ **Deployed on Render** – Fully hosted backend with a user-friendly Slack authentication page.  
 ✅ **Secure & Scalable** – Built with Django and PostgreSQL for efficient message storage and retrieval.  
 
-Your architecture design looks great! Here is the corrected presentation:
-
----
-
 ## **Architecture Design**
 
 This system consists of the following key components:
