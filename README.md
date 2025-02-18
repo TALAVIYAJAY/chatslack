@@ -54,6 +54,7 @@ pip install -r requirements.txt
 Create a `.env` file in the root directory and add the following:  
 ```env
 SLACK_BOT_TOKEN=your_slack_bot_token
+HUGGINGFACE_TOKEN=your_huggingface_token
 HUGGINGFACE_API_KEY=your_huggingface_api_key
 DATABASE_URL=your_postgresql_database_url
 ```
