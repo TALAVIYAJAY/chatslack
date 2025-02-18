@@ -49,7 +49,7 @@ def get_llama3_response(query, chat_history):
 You are a helpful and smart assistant. You accurately provide answers to the provided user query.<|eot_id|>
 {history_text}
 <|start_header_id|>user<|end_header_id|> Here is the query: ```{query}```.
-Provide a precise and concise answer in less than 100 words. Ensure sentences are complete and not cut off mid-word.<|eot_id|>
+Provide a precise and concise answer in less than 75 words. Ensure sentences are complete and not cut off mid-word.<|eot_id|>
 <|start_header_id|>assistant<|end_header_id|>"""
 
     headers = {
@@ -74,10 +74,10 @@ Provide a precise and concise answer in less than 100 words. Ensure sentences ar
 
             # If a valid response is found, return it
             if generated_text:
-                # Ensure response is within 100 words and does not cut sentences
+                # Ensure response is within 75 words and does not cut sentences
                 words = generated_text.split()
-                if len(words) > 100:
-                    truncated_response = " ".join(words[:100])
+                if len(words) > 75:
+                    truncated_response = " ".join(words[:75])
                     if "." in truncated_response:
                         truncated_response = truncated_response.rsplit(".", 1)[0] + "."  # Ensure full sentence
                     return truncated_response
