@@ -161,7 +161,7 @@ def slack_event_listener(request):
         print("Received Slack Message from User ID:", user_id)
 
         # Fetch last 5 conversations from PostgreSQL
-        last_5_conversations = cs.objects.filter(user_id=user_id).order_by('-created_at')[:5]
+        last_5_conversations = cs.objects.filter(user_id=user_id,channel_id=channel).order_by('-created_at')[:5]
 
         # Reverse order so the oldest appears first
         last_5_conversations = list(last_5_conversations)[::-1]
