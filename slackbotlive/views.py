@@ -38,13 +38,17 @@ def get_llama3_response(query, chat_history):
         "return_full_text": False
     }
 
-    # Format chat history for prompt
+    # Ensure chat_history is not None and is a list
+    if chat_history is None:
+        chat_history = []
+
+    # Format chat history for prompt if it exists
     history_text = ""
     for item in chat_history:
         history_text += f"<|start_header_id|>user<|end_header_id|> {item['user']}<|eot_id|>\n"
         history_text += f"<|start_header_id|>assistant<|end_header_id|> {item['bot']}<|eot_id|>\n"
 
-    # Construct the final prompt with chat history
+    # Construct the final prompt with or without chat history
     prompt = f"""<|begin_of_text|><|start_header_id|>system<|end_header_id|>
 You are a helpful and smart assistant. You accurately provide answers to the provided user query.<|eot_id|>
 {history_text}
@@ -98,6 +102,7 @@ Provide a precise and concise answer in less than 75 words. Ensure sentences are
     # If all retries fail, return a fallback response
     print("All attempts failed, returning fallback response.")
     return "I'm sorry, but I'm unable to process your request at the moment. Please try again later."
+
 
 # Function to Send LLM ANSWER to Slack
 def send_slack_message(channel, text):
